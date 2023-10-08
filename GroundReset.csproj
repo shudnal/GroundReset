@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -55,10 +55,10 @@
         <Reference Include="JFUtils">
             <HintPath>..\Utils\JFUtils.dll</HintPath>
         </Reference>
-        <Reference Include="System"/>
-        <Reference Include="System.Core"/>
-        <Reference Include="System.Data"/>
-        <Reference Include="System.Xml"/>
+        <Reference Include="System" />
+        <Reference Include="System.Core" />
+        <Reference Include="System.Data" />
+        <Reference Include="System.Xml" />
         <Reference Include="UnityEngine">
             <HintPath>..\..\Unity\Unity Hub\versions\2020.3.36f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
         </Reference>
@@ -73,39 +73,40 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="FunctionTimer.cs"/>
-        <Compile Include="FunctionUpdater.cs"/>
-        <Compile Include="GlobalUsings.cs"/>
-        <Compile Include="Marketplace_API.cs"/>
-        <Compile Include="Patch.cs"/>
-        <Compile Include="Plugin.cs"/>
-        <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="Reseter.cs"/>
-        <Compile Include="TerminalCommands.cs"/>
-        <Compile Include="WardIsLove\CustomCheck.cs"/>
-        <Compile Include="WardIsLove\ModCompat.cs"/>
-        <Compile Include="WardIsLove\WardIsLovePlugin.cs"/>
-        <Compile Include="WardIsLove\WardMonoscript.cs"/>
-        <Compile Include="WardIsLove\WardMonoscriptExt.cs"/>
+        <Compile Include="ChunkData.cs" />
+        <Compile Include="FunctionTimer.cs" />
+        <Compile Include="FunctionUpdater.cs" />
+        <Compile Include="GlobalUsings.cs" />
+        <Compile Include="Marketplace_API.cs" />
+        <Compile Include="Patch.cs" />
+        <Compile Include="Plugin.cs" />
+        <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="Reseter.cs" />
+        <Compile Include="TerminalCommands.cs" />
+        <Compile Include="WardIsLove\CustomCheck.cs" />
+        <Compile Include="WardIsLove\ModCompat.cs" />
+        <Compile Include="WardIsLove\WardIsLovePlugin.cs" />
+        <Compile Include="WardIsLove\WardMonoscript.cs" />
+        <Compile Include="WardIsLove\WardMonoscriptExt.cs" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="ILRepack.targets"/>
-        <Content Include="README.md"/>
+        <Content Include="ILRepack.targets" />
+        <Content Include="README.md" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="App.config"/>
-        <None Include="packages.config"/>
+        <None Include="App.config" />
+        <None Include="packages.config" />
     </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-    <Import Project="packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')"/>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    <Import Project="packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" />
     <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
         <PropertyGroup>
             <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
         </PropertyGroup>
-        <Error Condition="!Exists('packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets'))"/>
+        <Error Condition="!Exists('packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets'))" />
     </Target>
     <Target Name="CopyDLL" AfterTargets="ILRepack">
-        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim\BepInEx\plugins"/>
-        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim dedicated server\BepInEx\plugins"/>
+        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim\BepInEx\plugins" />
+        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim dedicated server\BepInEx\plugins" />
     </Target>
 </Project>

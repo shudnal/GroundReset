@@ -8,7 +8,9 @@ internal static class Reseter
     internal static readonly int HeightmapWidth = 64;
     internal static readonly int HeightmapScale = 1;
 
-    internal static async void ResetAllTerrains(bool checkIfNeed = true, bool ranFromConsole = false)
+    internal static async void ResetAllTerrains(bool checkIfNeed = true,
+        bool checkWards = true,
+        bool ranFromConsole = false)
     {
         var terrCompHash = "_TerrainCompiler".GetStableHashCode();
 
@@ -39,12 +41,12 @@ internal static class Reseter
             lastReset = DateTime.Now;
             foreach (var zdo in result)
             {
-                ResetTerrainComp(zdo);
+                ResetTerrainComp(zdo, checkWards);
                 resets++;
             }
         }
 
-        Debug($"Сброшено {resets} чанков, took {watch.ElapsedMilliseconds} ms", true);
+        Debug($"Have been reset {resets} chunks, took {watch.ElapsedMilliseconds} ms", true);
         if (ranFromConsole) Console.instance.AddString("<color=green> Done </color>");
     }
 
@@ -57,163 +59,149 @@ internal static class Reseter
         return !flag;
     }
 
-    internal static void ResetTerrainComp(ZDO zdo /*, bool checkZones = true*/)
+    internal static void ResetTerrainComp(ZDO zdo, bool checkWards)
     {
         var resets = 0;
-        bool[] m_modifiedHeight;
-        float[] m_levelDelta;
-        float[] m_smoothDelta;
-        bool[] m_modifiedPaint;
-        Color[] m_paintMask;
-        int width;
-        int scale;
         var zoneCenter = instance.GetZonePos(instance.GetZone(zdo.GetPosition()));
 
-        LoadOldData(zdo, out m_modifiedHeight, out m_levelDelta, out m_smoothDelta, out m_modifiedPaint,
-            out m_paintMask,
-            out width, out scale);
+        var data = LoadOldData(zdo);
 
-        var num = width + 1;
+        var num = HeightmapWidth + 1;
         for (var h = 0; h < num; h++)
         for (var w = 0; w < num; w++)
         {
             var idx = h * num + w;
 
-            if (!m_modifiedHeight[idx]) continue;
+            if (!data.m_modifiedHeight[idx]) continue;
 
-            var worldPos = VertexToWorld(zoneCenter, w, h);
-            var inWard = PrivateArea.InsideFactionArea(worldPos, Character.Faction.Players);
-            if (inWard) continue;
+            if (checkWards)
+            {
+                var worldPos = VertexToWorld(zoneCenter, w, h);
+                var inWard = worldPos.InsideAnyActiveFactionArea(Character.Faction.Players);
+                if (inWard) continue;
+            }
 
             resets++;
-            m_modifiedHeight[idx] = false;
-            m_levelDelta[idx] = 0;
-            m_smoothDelta[idx] = 0;
+            data.m_modifiedHeight[idx] = false;
+            data.m_levelDelta[idx] = 0;
+            data.m_smoothDelta[idx] = 0;
         }
 
-        num = width;
-        var paintLenMun1 = m_modifiedPaint.Length - 1;
+        num = HeightmapWidth;
+        var paintLenMun1 = data.m_modifiedPaint.Length - 1;
         for (var h = 0; h < num; h++)
         for (var w = 0; w < num; w++)
         {
             var idx = h * num + w;
             if (idx > paintLenMun1) continue;
-            if (!m_modifiedPaint[idx]) continue;
+            if (!data.m_modifiedPaint[idx]) continue;
 
-            var worldPos = VertexToWorld(zoneCenter, w, h);
-            var inWard = PrivateArea.InsideFactionArea(worldPos, Character.Faction.Players);
-            if (inWard) continue;
+            if (checkWards)
+            {
+                var worldPos = VertexToWorld(zoneCenter, w, h);
+                var inWard = worldPos.InsideAnyActiveFactionArea(Character.Faction.Players);
+                if (inWard) continue;
+            }
 
-            m_modifiedPaint[idx] = false;
-            m_paintMask[idx] = Color.clear;
+            data.m_modifiedPaint[idx] = false;
+            data.m_paintMask[idx] = Color.clear;
         }
 
 
-        SaveData();
+        SaveData(zdo, data);
 
-        ClutterSystem.instance?.ResetGrass(zdo.GetPosition(), width * scale / 2);
+        ClutterSystem.instance?.ResetGrass(zdo.GetPosition(), HeightmapWidth * HeightmapScale / 2);
         zdo.Set($"{ModName} time", lastReset.ToString());
 
         foreach (var comp in TerrainComp.s_instances)
             if (pokeCompConfig.Value)
                 comp.m_hmap?.Poke(false);
-
-        void SaveData()
-        {
-            var package = new ZPackage();
-            package.Write(1);
-            package.Write(0); //m_operations
-            package.Write(Vector3.zero); //m_lastOpPoint
-            package.Write(0); //m_lastOpRadius
-            package.Write(m_modifiedHeight.Length);
-            for (var index = 0; index < m_modifiedHeight.Length; ++index)
-            {
-                package.Write(m_modifiedHeight[index]);
-                if (m_modifiedHeight[index])
-                {
-                    package.Write(m_levelDelta[index]);
-                    package.Write(m_smoothDelta[index]);
-                }
-            }
-
-            package.Write(m_modifiedPaint.Length);
-            for (var index = 0; index < m_modifiedPaint.Length; ++index)
-            {
-                package.Write(m_modifiedPaint[index]);
-                if (m_modifiedPaint[index])
-                {
-                    package.Write(m_paintMask[index].r);
-                    package.Write(m_paintMask[index].g);
-                    package.Write(m_paintMask[index].b);
-                    package.Write(m_paintMask[index].a);
-                }
-            }
-
-            var bytes = Utils.Compress(package.GetArray());
-            zdo.Set(ZDOVars.s_TCData, bytes);
-        }
     }
 
-    internal static void LoadOldData(ZDO zdo,
-        out bool[] m_modifiedHeight,
-        out float[] m_levelDelta,
-        out float[] m_smoothDelta,
-        out bool[] m_modifiedPaint,
-        out Color[] m_paintMask,
-        out int width,
-        out int scale)
+    internal static void SaveData(ZDO zdo, ChunkData data)
     {
-        byte[] byteArray = zdo.GetByteArray(ZDOVars.s_TCData);
-        if (byteArray == null) throw new Exception("No data found, byteArray == null");
-        ZPackage zpackage = new ZPackage(Utils.Decompress(byteArray));
-        zpackage.ReadInt();
-        width = HeightmapWidth;
-        scale = HeightmapScale;
-        var m_operations = zpackage.ReadInt(); //m_operations
-        var m_lastOpPoint = zpackage.ReadVector3(); //m_lastOpPoint
-        var m_lastOpRadius = zpackage.ReadSingle(); //m_lastOpRadius
-        var num1 = zpackage.ReadInt(); //m_modifiedHeight.Length
-
-        var num = width + 1;
-        m_modifiedHeight = new bool[num * num];
-        m_levelDelta = new float[num * num];
-        m_smoothDelta = new float[num * num];
-
-        for (var index = 0; index < width; ++index)
+        var package = new ZPackage();
+        package.Write(1);
+        package.Write(0); //m_operations
+        package.Write(Vector3.zero); //m_lastOpPoint
+        package.Write(0); //m_lastOpRadius
+        package.Write(data.m_modifiedHeight.Length);
+        for (var index = 0; index < data.m_modifiedHeight.Length; ++index)
         {
-            m_modifiedHeight[index] = zpackage.ReadBool();
-            if (m_modifiedHeight[index])
+            package.Write(data.m_modifiedHeight[index]);
+            if (data.m_modifiedHeight[index])
             {
-                m_levelDelta[index] = zpackage.ReadSingle();
-                m_smoothDelta[index] = zpackage.ReadSingle();
-            } else
-            {
-                m_levelDelta[index] = 0.0f;
-                m_smoothDelta[index] = 0.0f;
+                package.Write(data.m_levelDelta[index]);
+                package.Write(data.m_smoothDelta[index]);
             }
         }
 
-        var num2 = zpackage.ReadInt();
-        m_modifiedPaint = new bool[width * width];
-        m_paintMask = new Color[width * width];
-        for (var index = 0; index < num2; ++index)
+        package.Write(data.m_modifiedPaint.Length);
+        for (var index = 0; index < data.m_modifiedPaint.Length; ++index)
         {
-            m_modifiedPaint[index] = zpackage.ReadBool();
-            if (m_modifiedPaint[index])
-                m_paintMask[index] = new Color
-                {
-                    r = zpackage.ReadSingle(),
-                    g = zpackage.ReadSingle(),
-                    b = zpackage.ReadSingle(),
-                    a = zpackage.ReadSingle()
-                };
-            else m_paintMask[index] = Color.black;
+            package.Write(data.m_modifiedPaint[index]);
+            if (data.m_modifiedPaint[index])
+            {
+                package.Write(data.m_paintMask[index].r);
+                package.Write(data.m_paintMask[index].g);
+                package.Write(data.m_paintMask[index].b);
+                package.Write(data.m_paintMask[index].a);
+            }
+        }
+
+        var bytes = Utils.Compress(package.GetArray());
+        zdo.Set(ZDOVars.s_TCData, bytes);
+    }
+
+    internal static ChunkData LoadOldData(ZDO zdo)
+    {
+        var chunkData = new ChunkData();
+        var num = HeightmapWidth + 1;
+        var byteArray = zdo.GetByteArray(ZDOVars.s_TCData);
+        var zPackage = new ZPackage(Utils.Decompress(byteArray));
+        zPackage.ReadInt();
+        zPackage.ReadInt();
+        zPackage.ReadVector3();
+        zPackage.ReadSingle();
+        var num1 = zPackage.ReadInt();
+        if (num1 != chunkData.m_modifiedHeight.Length) DebugWarning("Terrain data load error, height array missmatch");
+
+        for (var index = 0; index < num1; ++index)
+        {
+            chunkData.m_modifiedHeight[index] = zPackage.ReadBool();
+            if (chunkData.m_modifiedHeight[index])
+            {
+                chunkData.m_levelDelta[index] = zPackage.ReadSingle();
+                chunkData.m_smoothDelta[index] = zPackage.ReadSingle();
+            } else
+            {
+                chunkData.m_levelDelta[index] = 0.0f;
+                chunkData.m_smoothDelta[index] = 0.0f;
+            }
         }
 
         Debug(
-            $"Chunk data loaded. m_operations = {m_operations}, m_lastOpPoint = {m_lastOpPoint}, m_lastOpRadius = {m_lastOpRadius}, "
-            + $"m_modifiedHeight.Length = {num1}, m_modifiedPaint.Length = {num2}, m_paintMask.Length = {num2}\n"
-            + $"m_modifiedHeight.Any is true = {m_modifiedHeight.Any(x => x == true)}");
+            $"m_modifiedHeight ="
+            + $" {(chunkData.m_modifiedHeight.Any(x => x) ? "Has true" : "Only false")}, \n\n");
+        // + $" { chunkData.m_modifiedHeight.GetString()}, \n\n"
+        //   + $"m_levelDelta = {chunkData.m_levelDelta.GetString()}, \n\nm_smoothDelta = {m_smoothDelta.GetString()}");
+
+        var num2 = zPackage.ReadInt();
+        for (var index = 0; index < num2; ++index)
+        {
+            chunkData.m_modifiedPaint[index] = zPackage.ReadBool();
+            if (chunkData.m_modifiedPaint[index])
+                chunkData.m_paintMask[index] = new Color
+                {
+                    r = zPackage.ReadSingle(),
+                    g = zPackage.ReadSingle(),
+                    b = zPackage.ReadSingle(),
+                    a = zPackage.ReadSingle()
+                };
+            else chunkData.m_paintMask[index] = Color.black;
+        }
+
+        return chunkData;
     }
 
     public static Vector3 VertexToWorld(Vector3 heightmapPos, int x, int y)
