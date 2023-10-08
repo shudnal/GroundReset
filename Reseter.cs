@@ -1,250 +1,247 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
-using Compatibility.WardIsLove;
-using Market_API;
-using UnityEngine;
-using static GroundReset.Plugin;
 
-namespace GroundReset
+namespace GroundReset;
+
+internal static class Reseter
 {
-    internal static class Reseter
+    internal static readonly int HeightmapWidth = 64;
+    internal static readonly int HeightmapScale = 1;
+
+    internal static async void ResetAllTerrains(bool checkIfNeed = true, bool ranFromConsole = false)
     {
-        internal static void ResetAllTerrains(bool checkIfNeed = false, bool checkWards = true, bool checkZones = true)
-        {
-            var task = Task.Run(async () =>
-            {
-                var resets = 0;
-                TerrainComp.s_instances.ForEach(terrainComp =>
-                {
-                    var flag = true;
-                    if (checkIfNeed) flag = IsNeedToReset(terrainComp);
-                    if (flag)
-                    {
-                        ResetTerrainComp(terrainComp, checkWards, checkZones);
-                        terrainComp.m_nview.GetZDO().Set($"{ModName} time", lastReset.ToString());
-                        resets++;
-                    }
-                });
+        var terrCompHash = "_TerrainCompiler".GetStableHashCode();
 
-                if (resets > 0) Log($"Сброшено {resets} чанков в видимой области");
-            });
-        }
-
-        internal static bool IsNeedToReset(TerrainComp terrainComp)
+        var watch = new Stopwatch();
+        watch.Restart();
+        var result = await Task.Run(() =>
         {
-            ZDO zdo = terrainComp.m_nview.GetZDO();
-            string json = zdo.GetString($"{ModName} time", "");
-            if (string.IsNullOrEmpty(json))
+            var result = new List<ZDO>();
+            var zdos = ZDOMan.instance.m_objectsByID.Values.Where(x => x.GetPrefab() == terrCompHash).ToList();
+            foreach (var zdo in zdos)
             {
-                zdo.Set($"{ModName} time", DateTime.MinValue.ToString());
-                return false;
+                var flag = true;
+                if (checkIfNeed) flag = IsNeedToReset(zdo);
+                if (!flag) continue;
+                result.Add(zdo);
             }
 
-            var flag = json == lastReset.ToString();
-            if (flag) return false;
+            return result;
+        });
+        Debug(
+            $"ResetAllTerrains first task completed, took {watch.ElapsedMilliseconds} ms, result.Count = '{result.Count}'",
+            true);
 
-            return true;
+        watch.Restart();
+        var resets = 0;
+        if (result.Count > 0)
+        {
+            lastReset = DateTime.Now;
+            foreach (var zdo in result)
+            {
+                ResetTerrainComp(zdo);
+                resets++;
+            }
         }
 
-        internal static void ResetTerrainComp(TerrainComp terrainComp, bool checkWards = true, bool checkZones = true)
+        Debug($"Сброшено {resets} чанков, took {watch.ElapsedMilliseconds} ms", true);
+        if (ranFromConsole) Console.instance.AddString("<color=green> Done </color>");
+    }
+
+    internal static bool IsNeedToReset(ZDO zdo)
+    {
+        var savedTime = zdo.GetString($"{ModName} time");
+        if (!savedTime.IsGood()) return false;
+
+        var flag = savedTime == lastReset.ToString();
+        return !flag;
+    }
+
+    internal static void ResetTerrainComp(ZDO zdo /*, bool checkZones = true*/)
+    {
+        var resets = 0;
+        bool[] m_modifiedHeight;
+        float[] m_levelDelta;
+        float[] m_smoothDelta;
+        bool[] m_modifiedPaint;
+        Color[] m_paintMask;
+        int width;
+        int scale;
+        var zoneCenter = instance.GetZonePos(instance.GetZone(zdo.GetPosition()));
+
+        LoadOldData(zdo, out m_modifiedHeight, out m_levelDelta, out m_smoothDelta, out m_modifiedPaint,
+            out m_paintMask,
+            out width, out scale);
+
+        var num = width + 1;
+        for (var h = 0; h < num; h++)
+        for (var w = 0; w < num; w++)
         {
-            int resets = 0;
-            List<TerrainModifier> allInstances = TerrainModifier.GetAllInstances();
-            foreach (TerrainModifier terrainModifier in allInstances)
+            var idx = h * num + w;
+
+            if (!m_modifiedHeight[idx]) continue;
+
+            var worldPos = VertexToWorld(zoneCenter, w, h);
+            var inWard = PrivateArea.InsideFactionArea(worldPos, Character.Faction.Players);
+            if (inWard) continue;
+
+            resets++;
+            m_modifiedHeight[idx] = false;
+            m_levelDelta[idx] = 0;
+            m_smoothDelta[idx] = 0;
+        }
+
+        num = width;
+        var paintLenMun1 = m_modifiedPaint.Length - 1;
+        for (var h = 0; h < num; h++)
+        for (var w = 0; w < num; w++)
+        {
+            var idx = h * num + w;
+            if (idx > paintLenMun1) continue;
+            if (!m_modifiedPaint[idx]) continue;
+
+            var worldPos = VertexToWorld(zoneCenter, w, h);
+            var inWard = PrivateArea.InsideFactionArea(worldPos, Character.Faction.Players);
+            if (inWard) continue;
+
+            m_modifiedPaint[idx] = false;
+            m_paintMask[idx] = Color.clear;
+        }
+
+
+        SaveData();
+
+        ClutterSystem.instance?.ResetGrass(zdo.GetPosition(), width * scale / 2);
+        zdo.Set($"{ModName} time", lastReset.ToString());
+
+        foreach (var comp in TerrainComp.s_instances)
+            if (pokeCompConfig.Value)
+                comp.m_hmap?.Poke(false);
+
+        void SaveData()
+        {
+            var package = new ZPackage();
+            package.Write(1);
+            package.Write(0); //m_operations
+            package.Write(Vector3.zero); //m_lastOpPoint
+            package.Write(0); //m_lastOpRadius
+            package.Write(m_modifiedHeight.Length);
+            for (var index = 0; index < m_modifiedHeight.Length; ++index)
             {
-                Vector3 position = terrainModifier.transform.position;
-                ZNetView nview = terrainModifier.GetComponent<ZNetView>();
-                if (nview && nview.IsValid())
+                package.Write(m_modifiedHeight[index]);
+                if (m_modifiedHeight[index])
                 {
-                    resets++;
-                    if (terrainComp.m_hmap.TerrainVSModifier(terrainModifier))
-                        terrainComp.m_hmap.Poke(true);
-                    nview.Destroy();
+                    package.Write(m_levelDelta[index]);
+                    package.Write(m_smoothDelta[index]);
                 }
             }
 
-
-            if (!terrainComp.m_initialized)
-                return;
-
-            terrainComp.m_hmap.WorldToVertex(terrainComp.m_hmap.m_bounds.center, out int x, out int y);
-
-            bool[] m_modifiedHeight = terrainComp.m_modifiedHeight;
-            float[] m_levelDelta = terrainComp.m_levelDelta;
-            float[] m_smoothDelta = terrainComp.m_smoothDelta;
-            bool[] m_modifiedPaint = terrainComp.m_modifiedPaint;
-            Color[] m_paintMask = terrainComp.m_paintMask;
-
-            int m_width = terrainComp.m_width;
-
-            int thisResets = 0;
-            bool thisReset = false;
-            int num = m_width + 1;
-            for (int h = 0; h < num; h++)
+            package.Write(m_modifiedPaint.Length);
+            for (var index = 0; index < m_modifiedPaint.Length; ++index)
             {
-                for (int w = 0; w < num; w++)
+                package.Write(m_modifiedPaint[index]);
+                if (m_modifiedPaint[index])
                 {
-                    int idx = h * num + w;
-
-                    if (!m_modifiedHeight[idx])
-                        continue;
-
-                    var vertexToWorld = VertexToWorld(terrainComp.m_hmap, w, h);
-                    if (Utils.DistanceXZ(Player.m_localPlayer.transform.position, vertexToWorld) >= fuckingBugDistance)
-                        continue;
-
-                    var inWard = PrivateArea.InsideFactionArea(vertexToWorld,
-                        Character.Faction.Players);
-                    if (inWard && checkWards)
-                        continue;
-                    if (Marketplace_API.IsInstalled())
-                    {
-                        var inZone = Marketplace_API.IsPointInsideTerritoryWithFlag(vertexToWorld,
-                            Marketplace_API.TerritoryFlags.NoPickaxe, out string name,
-                            out Marketplace_API.TerritoryFlags flags,
-                            out Marketplace_API.AdditionalTerritoryFlags additionalFlags);
-                        if (inZone && checkZones)
-                            continue;
-                    }
-
-                    if (WardIsLovePlugin.IsLoaded())
-                    {
-                        bool inWardIsLoveWard = false;
-                        if (WardIsLovePlugin.WardEnabled().Value &&
-                            WardMonoscript.CheckInWardMonoscript(vertexToWorld))
-                        {
-                            var ward = WardMonoscriptExt.GetWardMonoscript(vertexToWorld);
-                            if (ward != null)
-                            {
-                                inWardIsLoveWard =
-                                    !WardMonoscript.CheckAccess(vertexToWorld, ward.GetWardRadius(), false);
-                            }
-                        }
-
-                        if (inWardIsLoveWard && checkWards)
-                            continue;
-                    }
-
-
-                    resets++;
-                    thisResets++;
-                    thisReset = true;
-
-                    var level = m_levelDelta[idx];
-                    var smooth = m_smoothDelta[idx];
-                    m_modifiedHeight[idx] = false;
-                    m_levelDelta[idx] = 0;
-                    m_smoothDelta[idx] = 0;
+                    package.Write(m_paintMask[index].r);
+                    package.Write(m_paintMask[index].g);
+                    package.Write(m_paintMask[index].b);
+                    package.Write(m_paintMask[index].a);
                 }
             }
 
-            num = m_width;
-            for (int h = 0; h < num; h++)
+            var bytes = Utils.Compress(package.GetArray());
+            zdo.Set(ZDOVars.s_TCData, bytes);
+        }
+    }
+
+    internal static void LoadOldData(ZDO zdo,
+        out bool[] m_modifiedHeight,
+        out float[] m_levelDelta,
+        out float[] m_smoothDelta,
+        out bool[] m_modifiedPaint,
+        out Color[] m_paintMask,
+        out int width,
+        out int scale)
+    {
+        byte[] byteArray = zdo.GetByteArray(ZDOVars.s_TCData);
+        if (byteArray == null) throw new Exception("No data found, byteArray == null");
+        ZPackage zpackage = new ZPackage(Utils.Decompress(byteArray));
+        zpackage.ReadInt();
+        width = HeightmapWidth;
+        scale = HeightmapScale;
+        var m_operations = zpackage.ReadInt(); //m_operations
+        var m_lastOpPoint = zpackage.ReadVector3(); //m_lastOpPoint
+        var m_lastOpRadius = zpackage.ReadSingle(); //m_lastOpRadius
+        var num1 = zpackage.ReadInt(); //m_modifiedHeight.Length
+
+        var num = width + 1;
+        m_modifiedHeight = new bool[num * num];
+        m_levelDelta = new float[num * num];
+        m_smoothDelta = new float[num * num];
+
+        for (var index = 0; index < width; ++index)
+        {
+            m_modifiedHeight[index] = zpackage.ReadBool();
+            if (m_modifiedHeight[index])
             {
-                for (int w = 0; w < num; w++)
+                m_levelDelta[index] = zpackage.ReadSingle();
+                m_smoothDelta[index] = zpackage.ReadSingle();
+            } else
+            {
+                m_levelDelta[index] = 0.0f;
+                m_smoothDelta[index] = 0.0f;
+            }
+        }
+
+        var num2 = zpackage.ReadInt();
+        m_modifiedPaint = new bool[width * width];
+        m_paintMask = new Color[width * width];
+        for (var index = 0; index < num2; ++index)
+        {
+            m_modifiedPaint[index] = zpackage.ReadBool();
+            if (m_modifiedPaint[index])
+                m_paintMask[index] = new Color
                 {
-                    int idx = h * num + w;
-
-                    if (!m_modifiedPaint[idx])
-                        continue;
-
-                    var vertexToWorld = VertexToWorld(terrainComp.m_hmap, w, h);
-                    if (Utils.DistanceXZ(Player.m_localPlayer.transform.position, vertexToWorld) >= fuckingBugDistance)
-                        continue;
-                    var inWard = PrivateArea.InsideFactionArea(vertexToWorld,
-                        Character.Faction.Players);
-                    if (inWard && checkWards)
-                        continue;
-                    if (Marketplace_API.IsInstalled())
-                    {
-                        var inZone = Marketplace_API.IsPointInsideTerritoryWithFlag(vertexToWorld,
-                            Marketplace_API.TerritoryFlags.NoPickaxe, out string name,
-                            out Marketplace_API.TerritoryFlags flags,
-                            out Marketplace_API.AdditionalTerritoryFlags additionalFlags);
-                        if (inZone && checkZones)
-                            continue;
-                    }
-
-                    if (WardIsLovePlugin.IsLoaded())
-                    {
-                        bool inWardIsLoveWard = false;
-                        if (WardIsLovePlugin.WardEnabled().Value &&
-                            WardMonoscript.CheckInWardMonoscript(vertexToWorld))
-                        {
-                            var ward = WardMonoscriptExt.GetWardMonoscript(vertexToWorld);
-                            if (ward != null)
-                            {
-                                inWardIsLoveWard =
-                                    !WardMonoscript.CheckAccess(vertexToWorld, ward.GetWardRadius(), false);
-                            }
-                        }
-
-                        if (inWardIsLoveWard && checkWards)
-                            continue;
-                    }
-
-
-                    thisReset = true;
-                    m_modifiedPaint[idx] = false;
-                    m_paintMask[idx] = Color.clear;
-                }
-            }
-
-            if (thisReset)
-            {
-                terrainComp.m_modifiedHeight = m_modifiedHeight;
-                terrainComp.m_levelDelta = m_levelDelta;
-                terrainComp.m_smoothDelta = m_smoothDelta;
-                terrainComp.m_modifiedPaint = m_modifiedPaint;
-                terrainComp.m_paintMask = m_paintMask;
-
-                terrainComp.Save();
-                terrainComp.m_hmap.Poke(true);
-            }
-
-            if (resets > 0 && ClutterSystem.instance)
-                ClutterSystem.instance.ResetGrass(terrainComp.transform.position, 45);
-
-            return;
+                    r = zpackage.ReadSingle(),
+                    g = zpackage.ReadSingle(),
+                    b = zpackage.ReadSingle(),
+                    a = zpackage.ReadSingle()
+                };
+            else m_paintMask[index] = Color.black;
         }
 
-        public static IEnumerator WateForWardsIEnumerator(TerrainComp terrainComp)
-        {
-            yield return new WaitForSeconds(15f);
+        Debug(
+            $"Chunk data loaded. m_operations = {m_operations}, m_lastOpPoint = {m_lastOpPoint}, m_lastOpRadius = {m_lastOpRadius}, "
+            + $"m_modifiedHeight.Length = {num1}, m_modifiedPaint.Length = {num2}, m_paintMask.Length = {num2}\n"
+            + $"m_modifiedHeight.Any is true = {m_modifiedHeight.Any(x => x == true)}");
+    }
 
-            ResetTerrainComp(terrainComp);
-        }
+    public static Vector3 VertexToWorld(Vector3 heightmapPos, int x, int y)
+    {
+        var xPos = ((float)x - HeightmapWidth / 2) * HeightmapScale;
+        var zPos = ((float)y - HeightmapWidth / 2) * HeightmapScale;
+        return heightmapPos + new Vector3(xPos, 0f, zPos);
+    }
 
-        public static IEnumerator ResetAllIEnumerator()
-        {
-            yield return new WaitForSeconds(35);
+    public static void WorldToVertex(Vector3 worldPos, Vector3 heightmapPos, out int x, out int y)
+    {
+        var vector3 = worldPos - heightmapPos;
+        x = Mathf.FloorToInt((float)(vector3.x / (double)HeightmapScale + 0.5)) + HeightmapWidth / 2;
+        y = Mathf.FloorToInt((float)(vector3.z / (double)HeightmapScale + 0.5)) + HeightmapWidth / 2;
+    }
 
-            ResetAllTerrains(true);
-            _self.StartCoroutine(ResetAllIEnumerator());
-        }
+    private static float CoordDistance(float x, float y, float rx, float ry)
+    {
+        var num = x - rx;
+        var num2 = y - ry;
+        return Mathf.Sqrt(num * num + num2 * num2);
+    }
 
-        public static Vector3 VertexToWorld(Heightmap heightmap, int x, int y)
-        {
-            float xPos = ((float)x - heightmap.m_width / 2) * heightmap.m_scale;
-            float zPos = ((float)y - heightmap.m_width / 2) * heightmap.m_scale;
-            return heightmap.transform.position + new Vector3(xPos, 0f, zPos);
-        }
+    public static IEnumerator SaveTime()
+    {
+        yield return new WaitForSeconds(savedTimeUpdateInterval);
 
-        private static float CoordDistance(float x, float y, float rx, float ry)
-        {
-            float num = x - rx;
-            float num2 = y - ry;
-            return Mathf.Sqrt(num * num + num2 * num2);
-        }
-
-        public static IEnumerator SaveTime()
-        {
-            yield return new WaitForSeconds(savedTimeUpdateInterval);
-
-            timePassedInMinutesConfig.Value = timer.Timer / 60;
-            ZNetScene.instance.StartCoroutine(SaveTime());
-        }
+        timePassedInMinutesConfig.Value = timer.Timer / 60;
+        ZNetScene.instance.StartCoroutine(SaveTime());
     }
 }

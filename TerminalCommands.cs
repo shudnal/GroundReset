@@ -1,48 +1,94 @@
-﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Rendering;
+﻿using System.Threading.Tasks;
 
 namespace GroundReset;
 
+[HarmonyPatch]
 public static class TerminalCommands
 {
-    private static string modName => Plugin.ModName;
-
-    [HarmonyPatch(typeof(Terminal), nameof(Terminal.InitTerminal))]
-    internal class AddChatCommands
+    [HarmonyPatch(typeof(Terminal), nameof(Terminal.InitTerminal))] [HarmonyPostfix]
+    private static void AddCommands()
     {
-        private static void Postfix()
+        new ConsoleCommand("ResetAllTerrains",
+            "Resets all terrains in world. ResetAllTerrains [check wards] [check zones]", args =>
+            {
+                mod.RunCommand(args =>
+                {
+                    if (!mod.IsAdmin) throw new Exception("You are not an admin on this server");
+                    Reseter.ResetAllTerrains(false, true);
+
+                    args.Context.AddString("Processing...");
+                }, args);
+            }, isCheat: true);
+
+        new ConsoleCommand("ResetCurrentChunk",
+            "Resets all player chunk. ResetCurrentChunk [check wards] [check zones]", args =>
+            {
+                mod.RunCommand(args =>
+                {
+                    if (!mod.IsAdmin) throw new Exception("You are not an admin on this server");
+                    var comp = TerrainComp.FindTerrainCompiler(Player.m_localPlayer.transform.position);
+                    Reseter.ResetTerrainComp(comp
+                        .m_nview.GetZDO());
+
+                    args.Context.AddString("Processing...");
+                }, args);
+            }, isCheat: true);
+        new ConsoleCommand("resetAllChunksTimers",
+            "", args =>
+            {
+                var terrCompHash = "_TerrainCompiler".GetStableHashCode();
+                mod.RunCommand(args =>
+                {
+                    if (!mod.IsAdmin) throw new Exception("You are not an admin on this server");
+
+                    args.Context.AddString("Processing...");
+                    var zdos = ZDOMan.instance.m_objectsByID.Values.Where(x => x.GetPrefab() == terrCompHash).ToList();
+                    foreach (var zdo in zdos) zdo.Set($"{ModName} time", DateTime.MinValue.ToString());
+                    args.Context.AddString("Done");
+                }, args);
+            }, isCheat: true);
+        new ConsoleCommand("InsidePlayerArea",
+            "", args =>
+            {
+                mod.RunCommand(args =>
+                {
+                    args.Context.AddString(PrivateArea.InsideFactionArea(Player.m_localPlayer.transform.position,
+                        Character.Faction.Players)
+                        ? "true"
+                        : "false");
+                }, args);
+            }, isCheat: true);
+        new ConsoleCommand("GoThroughHeightmap",
+            "", args =>
+            {
+                mod.RunCommand(args =>
+                {
+                    GoThroughHeightmap();
+                }, args);
+            }, isCheat: true);
+    }
+
+    private static async void GoThroughHeightmap()
+    {
+        var comp = TerrainComp.FindTerrainCompiler(Player.m_localPlayer.transform.position);
+        var zoneCenter = instance.GetZonePos(instance.GetZone(comp.m_nview.GetZDO().GetPosition()));
+        var skyLine = new GameObject("SkyLine").AddComponent<LineRenderer>();
+        skyLine.positionCount = 2;
+        skyLine.material = new(Shader.Find("Unlit/Color"));
+        skyLine.material.name = "UnlitColor Material";
+        skyLine.material.color = Color.white;
+
+        var num = Reseter.HeightmapWidth + 1;
+        for (var h = 0; h < num; h++)
+        for (var w = 0; w < num; w++)
         {
-            _ = new Terminal.ConsoleCommand(modName, $"Manages the {modName.Replace(".", "")} commands.",
-                args =>
-                {
-                    try
-                    {
-                        if (!ZNet.instance) return;
-                        if (!Plugin.configSync.IsAdmin && !ZNet.instance.IsServer())
-                        {
-                            args.Context.AddString("You are not an admin on this server.");
-                            return;
-                        }
-
-                        if (args.Length == 4 && args[1] == "ResetNearestTerrains")
-                            Reseter.ResetAllTerrains(false, bool.Parse(args[2]), bool.Parse(args[3]));
-
-                        args.Context.AddString("ResetNearestTerrains [check wards] [chack zones]");
-                    }
-                    catch (Exception e)
-                    {
-                        Plugin.DebugError(e);
-                        throw;
-                    }
-                },
-                optionsFetcher: () => new List<string>
-                {
-                    "ResetNearestTerrains true true", "ResetNearestTerrains true false",
-                    "ResetNearestTerrains false true", "ResetNearestTerrains false false"
-                });
+            var idx = h * num + w;
+            var worldPos = Reseter.VertexToWorld(zoneCenter, w, h);
+            var inWard = PrivateArea.InsideFactionArea(worldPos, Character.Faction.Players);
+            skyLine.material.color = !inWard ? Color.green : Color.red;
+            skyLine.SetPosition(0, worldPos);
+            skyLine.SetPosition(1, worldPos with { y = 10000 });
+            await Task.Delay(10);
         }
     }
 }

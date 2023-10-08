@@ -1,16 +1,21 @@
-﻿using System;
-using System.Reflection;
-using UnityEngine;
+﻿using System.Reflection;
 
 namespace Market_API;
 
 //if you want to use marketplace api just copy-paste this whole class into your code and use its methods
 public static class Marketplace_API
 {
-    private static readonly bool _IsInstalled;
-    private static readonly MethodInfo MI_IsPlayerInsideTerritory;
-    private static readonly MethodInfo MI_IsObjectInsideTerritoryWithFlag;
-    private static readonly MethodInfo MI_IsObjectInsideTerritoryWithFlag_Additional;
+    [Flags]
+    public enum AdditionalTerritoryFlags
+    {
+        None = 0,
+        NoItemLoss = 1 << 0,
+        SnowMask = 1 << 1,
+        NoMist = 1 << 2,
+        InfiniteEitr = 1 << 3,
+        InfiniteStamina = 1 << 4,
+        NoCreatureDrops = 1 << 5
+    }
 
     [Flags]
     public enum TerritoryFlags
@@ -47,92 +52,13 @@ public static class Marketplace_API
         NoStructureSupport = 1 << 28,
         NoInteractPortals = 1 << 29,
         CustomPaint = 1 << 30,
-        LimitZoneHeight = 1 << 31,
+        LimitZoneHeight = 1 << 31
     }
 
-    [Flags]
-    public enum AdditionalTerritoryFlags
-    {
-        None = 0,
-        NoItemLoss = 1 << 0,
-        SnowMask = 1 << 1,
-        NoMist = 1 << 2,
-        InfiniteEitr = 1 << 3,
-        InfiniteStamina = 1 << 4,
-        NoCreatureDrops = 1 << 5,
-    }
-
-    //uncomment that if you want to use HasFlagFast
-    /*
-    public static bool HasFlagFast(this TerritoryFlags flags, TerritoryFlags flag)
-    {
-        return (flags & flag) != 0;
-    }
-    public static bool HasFlagFast(this AdditionalTerritoryFlags flags, AdditionalTerritoryFlags flag)
-    {
-        return (flags & flag) != 0;
-    }*/
-
-    public static bool IsInstalled() => _IsInstalled;
-
-    public static bool IsPlayerInsideTerritory(out string name, out TerritoryFlags flags,
-        out AdditionalTerritoryFlags additionalFlags)
-    {
-        flags = 0;
-        additionalFlags = 0;
-        name = "";
-        if (!_IsInstalled || MI_IsPlayerInsideTerritory == null)
-            return false;
-
-        object[] args = { "", 0, 0 };
-        bool result = (bool)MI_IsPlayerInsideTerritory.Invoke(null, args);
-        name = (string)args[0];
-        flags = (TerritoryFlags)args[1];
-        additionalFlags = (AdditionalTerritoryFlags)args[2];
-        return result;
-    }
-
-    public static bool IsObjectInsideTerritoryWithFlag(GameObject go, TerritoryFlags flag, out string name,
-        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags) =>
-        IsPointInsideTerritoryWithFlag(go.transform.position, flag, out name, out flags, out additionalFlags);
-
-    public static bool IsObjectInsideTerritoryWithFlag(GameObject go, AdditionalTerritoryFlags flag, out string name,
-        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags) =>
-        IsPointInsideTerritoryWithFlag(go.transform.position, flag, out name, out flags, out additionalFlags);
-
-    public static bool IsPointInsideTerritoryWithFlag(Vector3 pos, TerritoryFlags flag, out string name,
-        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags)
-    {
-        name = "";
-        flags = 0;
-        additionalFlags = 0;
-        if (!_IsInstalled || MI_IsObjectInsideTerritoryWithFlag == null)
-            return false;
-
-        object[] args = { pos, (int)flag, "", 0, 0 };
-        bool result = (bool)MI_IsObjectInsideTerritoryWithFlag.Invoke(null, args);
-        name = (string)args[2];
-        flags = (TerritoryFlags)args[3];
-        additionalFlags = (AdditionalTerritoryFlags)args[4];
-        return result;
-    }
-
-    public static bool IsPointInsideTerritoryWithFlag(Vector3 pos, AdditionalTerritoryFlags flag, out string name,
-        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags)
-    {
-        name = "";
-        flags = 0;
-        additionalFlags = 0;
-        if (!_IsInstalled || MI_IsObjectInsideTerritoryWithFlag_Additional == null)
-            return false;
-
-        object[] args = { pos, (int)flag, "", 0, 0 };
-        bool result = (bool)MI_IsObjectInsideTerritoryWithFlag_Additional.Invoke(null, args);
-        name = (string)args[2];
-        flags = (TerritoryFlags)args[3];
-        additionalFlags = (AdditionalTerritoryFlags)args[4];
-        return result;
-    }
+    private static readonly bool _IsInstalled;
+    private static readonly MethodInfo MI_IsPlayerInsideTerritory;
+    private static readonly MethodInfo MI_IsObjectInsideTerritoryWithFlag;
+    private static readonly MethodInfo MI_IsObjectInsideTerritoryWithFlag_Additional;
 
     static Marketplace_API()
     {
@@ -150,5 +76,81 @@ public static class Marketplace_API
         MI_IsObjectInsideTerritoryWithFlag_Additional = marketplaceAPI.GetMethod(
             "IsObjectInsideTerritoryWithFlag_Additional",
             BindingFlags.Public | BindingFlags.Static);
+    }
+
+    //uncomment that if you want to use HasFlagFast
+    /*
+    public static bool HasFlagFast(this TerritoryFlags flags, TerritoryFlags flag)
+    {
+        return (flags & flag) != 0;
+    }
+    public static bool HasFlagFast(this AdditionalTerritoryFlags flags, AdditionalTerritoryFlags flag)
+    {
+        return (flags & flag) != 0;
+    }*/
+
+    public static bool IsInstalled() { return _IsInstalled; }
+
+    public static bool IsPlayerInsideTerritory(out string name, out TerritoryFlags flags,
+        out AdditionalTerritoryFlags additionalFlags)
+    {
+        flags = 0;
+        additionalFlags = 0;
+        name = "";
+        if (!_IsInstalled || MI_IsPlayerInsideTerritory == null)
+            return false;
+
+        object[] args = { "", 0, 0 };
+        var result = (bool)MI_IsPlayerInsideTerritory.Invoke(null, args);
+        name = (string)args[0];
+        flags = (TerritoryFlags)args[1];
+        additionalFlags = (AdditionalTerritoryFlags)args[2];
+        return result;
+    }
+
+    public static bool IsObjectInsideTerritoryWithFlag(GameObject go, TerritoryFlags flag, out string name,
+        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags)
+    {
+        return IsPointInsideTerritoryWithFlag(go.transform.position, flag, out name, out flags, out additionalFlags);
+    }
+
+    public static bool IsObjectInsideTerritoryWithFlag(GameObject go, AdditionalTerritoryFlags flag, out string name,
+        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags)
+    {
+        return IsPointInsideTerritoryWithFlag(go.transform.position, flag, out name, out flags, out additionalFlags);
+    }
+
+    public static bool IsPointInsideTerritoryWithFlag(Vector3 pos, TerritoryFlags flag, out string name,
+        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags)
+    {
+        name = "";
+        flags = 0;
+        additionalFlags = 0;
+        if (!_IsInstalled || MI_IsObjectInsideTerritoryWithFlag == null)
+            return false;
+
+        object[] args = { pos, (int)flag, "", 0, 0 };
+        var result = (bool)MI_IsObjectInsideTerritoryWithFlag.Invoke(null, args);
+        name = (string)args[2];
+        flags = (TerritoryFlags)args[3];
+        additionalFlags = (AdditionalTerritoryFlags)args[4];
+        return result;
+    }
+
+    public static bool IsPointInsideTerritoryWithFlag(Vector3 pos, AdditionalTerritoryFlags flag, out string name,
+        out TerritoryFlags flags, out AdditionalTerritoryFlags additionalFlags)
+    {
+        name = "";
+        flags = 0;
+        additionalFlags = 0;
+        if (!_IsInstalled || MI_IsObjectInsideTerritoryWithFlag_Additional == null)
+            return false;
+
+        object[] args = { pos, (int)flag, "", 0, 0 };
+        var result = (bool)MI_IsObjectInsideTerritoryWithFlag_Additional.Invoke(null, args);
+        name = (string)args[2];
+        flags = (TerritoryFlags)args[3];
+        additionalFlags = (AdditionalTerritoryFlags)args[4];
+        return result;
     }
 }
