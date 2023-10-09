@@ -14,30 +14,14 @@ public static class TerminalCommands
                 mod.RunCommand(args =>
                 {
                     if (!mod.IsAdmin) throw new Exception("You are not an admin on this server");
-                    if (args.Length < 2 || !bool.TryParse(args[1], out bool checkWards))
+                    if (args.Length < 2 || !bool.TryParse(args[1], out var checkWards))
                         throw new ConsoleException("First argument - checkWards - must be a boolean: true or false");
                     Reseter.ResetAllTerrains(false, checkWards);
 
                     args.Context.AddString("Processing...");
                 }, args);
-            }, isCheat: true, optionsFetcher: () => new List<string>() { "true", "false" });
+            }, true, optionsFetcher: () => new List<string> { "true", "false" });
 
-
-        new ConsoleCommand("ResetCurrentChunk",
-            "Resets all player chunk. ResetCurrentChunk [check wards] [check zones]", args =>
-            {
-                mod.RunCommand(args =>
-                {
-                    if (!mod.IsAdmin) throw new Exception("You are not an admin on this server");
-                    var comp = TerrainComp.FindTerrainCompiler(Player.m_localPlayer.transform.position);
-                    if (args.Length < 2 || !bool.TryParse(args[1], out bool checkWards))
-                        throw new ConsoleException("First argument - checkWards - must be a boolean: true or false");
-
-                    Reseter.ResetTerrainComp(comp.m_nview.GetZDO(), checkWards);
-
-                    args.Context.AddString("Processing...");
-                }, args);
-            }, isCheat: true, optionsFetcher: () => new List<string>() { "true", "false" });
         new ConsoleCommand("resetAllChunksTimers",
             "", args =>
             {
@@ -52,6 +36,7 @@ public static class TerminalCommands
                     args.Context.AddString("Done");
                 }, args);
             }, true);
+
         new ConsoleCommand("InsidePlayerArea",
             "", args =>
             {

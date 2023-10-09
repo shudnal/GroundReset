@@ -1,4 +1,4 @@
-﻿namespace Compatibility.WardIsLove;
+﻿namespace GroundReset.Compatibility.WardIsLove;
 
 public static class WardMonoscriptExt
 {

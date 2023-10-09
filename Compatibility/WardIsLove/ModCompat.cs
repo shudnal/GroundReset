@@ -1,4 +1,4 @@
-﻿namespace Compatibility;
+﻿namespace GroundReset.Compatibility.WardIsLove;
 
 public class ModCompat
 {

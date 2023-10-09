@@ -1,40 +1,39 @@
 ﻿using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace GroundReset;
 
 internal static class Reseter
 {
+    private const string terrCompPrefabName = "_TerrainCompiler";
+    private static readonly int RadiusNetKey = "wardRadius".GetStableHashCode();
+    private static int FactionNetKey = "faction".GetStableHashCode();
+
     internal static readonly int HeightmapWidth = 64;
     internal static readonly int HeightmapScale = 1;
+    private static List<ZDO> wards = new();
+    public static List<WardSettings> wardsSettingsList = new();
 
     internal static async void ResetAllTerrains(bool checkIfNeed = true,
         bool checkWards = true,
         bool ranFromConsole = false)
     {
-        var terrCompHash = "_TerrainCompiler".GetStableHashCode();
-
         var watch = new Stopwatch();
         watch.Restart();
-        var result = await Task.Run(() =>
+        var result = await instance.GetWorldObjectsInAreaAsync(terrCompPrefabName, zdo =>
         {
-            var result = new List<ZDO>();
-            var zdos = ZDOMan.instance.m_objectsByID.Values.Where(x => x.GetPrefab() == terrCompHash).ToList();
-            foreach (var zdo in zdos)
-            {
-                var flag = true;
-                if (checkIfNeed) flag = IsNeedToReset(zdo);
-                if (!flag) continue;
-                result.Add(zdo);
-            }
-
-            return result;
+            var flag = true;
+            if (checkIfNeed) flag = IsNeedToReset(zdo);
+            return flag;
         });
-        Debug(
-            $"ResetAllTerrains first task completed, took {watch.ElapsedMilliseconds} ms, result.Count = '{result.Count}'",
-            true);
 
-        watch.Restart();
+        wards = new List<ZDO>();
+        for (var i = 0; i < wardsSettingsList.Count; i++)
+        {
+            var wardsSettings = wardsSettingsList[i];
+            var zdos = await instance.GetWorldObjectsInAreaAsync(wardsSettings.prefabName);
+            wards = wards.Concat(zdos).ToList();
+        }
+
         var resets = 0;
         if (result.Count > 0)
         {
@@ -46,11 +45,14 @@ internal static class Reseter
             }
         }
 
-        Debug($"Have been reset {resets} chunks, took {watch.ElapsedMilliseconds} ms", true);
+        Debug(
+            $"{resets} chunks have been reset, took {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds).TotalSeconds} seconds",
+            true);
         if (ranFromConsole) Console.instance.AddString("<color=green> Done </color>");
+        wards = null;
     }
 
-    internal static bool IsNeedToReset(ZDO zdo)
+    private static bool IsNeedToReset(ZDO zdo)
     {
         var savedTime = zdo.GetString($"{ModName} time");
         if (!savedTime.IsGood()) return false;
@@ -59,7 +61,7 @@ internal static class Reseter
         return !flag;
     }
 
-    internal static void ResetTerrainComp(ZDO zdo, bool checkWards)
+    private static async void ResetTerrainComp(ZDO zdo, bool checkWards)
     {
         var resets = 0;
         var zoneCenter = instance.GetZonePos(instance.GetZone(zdo.GetPosition()));
@@ -73,13 +75,7 @@ internal static class Reseter
             var idx = h * num + w;
 
             if (!data.m_modifiedHeight[idx]) continue;
-
-            if (checkWards)
-            {
-                var worldPos = VertexToWorld(zoneCenter, w, h);
-                var inWard = worldPos.InsideAnyActiveFactionArea(Character.Faction.Players);
-                if (inWard) continue;
-            }
+            if (checkWards && IsInWard(zoneCenter, w, h)) continue;
 
             resets++;
             data.m_modifiedHeight[idx] = false;
@@ -95,13 +91,7 @@ internal static class Reseter
             var idx = h * num + w;
             if (idx > paintLenMun1) continue;
             if (!data.m_modifiedPaint[idx]) continue;
-
-            if (checkWards)
-            {
-                var worldPos = VertexToWorld(zoneCenter, w, h);
-                var inWard = worldPos.InsideAnyActiveFactionArea(Character.Faction.Players);
-                if (inWard) continue;
-            }
+            if (checkWards && IsInWard(zoneCenter, w, h)) continue;
 
             data.m_modifiedPaint[idx] = false;
             data.m_paintMask[idx] = Color.clear;
@@ -114,8 +104,7 @@ internal static class Reseter
         zdo.Set($"{ModName} time", lastReset.ToString());
 
         foreach (var comp in TerrainComp.s_instances)
-            if (pokeCompConfig.Value)
-                comp.m_hmap?.Poke(false);
+            comp.m_hmap?.Poke(false);
     }
 
     internal static void SaveData(ZDO zdo, ChunkData data)
@@ -180,12 +169,6 @@ internal static class Reseter
             }
         }
 
-        Debug(
-            $"m_modifiedHeight ="
-            + $" {(chunkData.m_modifiedHeight.Any(x => x) ? "Has true" : "Only false")}, \n\n");
-        // + $" { chunkData.m_modifiedHeight.GetString()}, \n\n"
-        //   + $"m_levelDelta = {chunkData.m_levelDelta.GetString()}, \n\nm_smoothDelta = {m_smoothDelta.GetString()}");
-
         var num2 = zPackage.ReadInt();
         for (var index = 0; index < num2; ++index)
         {
@@ -231,5 +214,29 @@ internal static class Reseter
 
         timePassedInMinutesConfig.Value = timer.Timer / 60;
         ZNetScene.instance.StartCoroutine(SaveTime());
+    }
+
+    private static bool IsInWard(Vector3 zoneCenter, int w, int h)
+    {
+        var worldPos = VertexToWorld(zoneCenter, w, h);
+        return wards.Exists(zdo1 =>
+        {
+            var wardSettings =
+                wardsSettingsList.Find(s => s.prefabName.GetStableHashCode() == zdo1.GetPrefab());
+            var isEnabled = zdo1.GetBool(ZDOVars.s_enabled, false);
+            var radius = zdo1.GetFloat(RadiusNetKey, -1);
+            if (radius == -1) radius = wardSettings.radius;
+            var inRange = worldPos.DistanceXZ(zdo1.GetPosition()) <= radius;
+            zdo1.Set(RadiusNetKey, radius);
+
+            // var playerFaction = Character.Faction.Players.ToString();
+            // var faction = zdo1.GetString(FactionNetKey, defaultValue: "-1");
+            // if (faction == "-1") faction = wardSettings.faction;
+            // var isPlayerFaction = faction == playerFaction;
+            // zdo1.Set(FactionNetKey, faction);
+            //  return isEnabled && inRange && isPlayerFaction;
+
+            return isEnabled && inRange;
+        });
     }
 }

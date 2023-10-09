@@ -10,9 +10,7 @@
     --------------------------------------------------
  */
 
-using GroundReset;
-
-namespace CodeMonkey.Utils;
+namespace GroundReset;
 
 /*
  * Triggers a Action after a certain time 

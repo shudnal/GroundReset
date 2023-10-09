@@ -1,13 +1,11 @@
-﻿using CodeMonkey.Utils;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine.SceneManagement;
 
-namespace GroundReset;
+namespace GroundReset.Patch;
 
-[HarmonyPatch]
-internal class Patch
+[HarmonyPatch] internal class StartTimer
 {
     [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.Awake))] [HarmonyPostfix]
-    public static void ZNetSceneAwake_StartTimer(ZNetScene __instance)
+    private static void ZNetSceneAwake_StartTimer(ZNetScene __instance)
     {
         if (SceneManager.GetActiveScene().name != "main") return;
         if (!ZNet.instance.IsServer()) return;
@@ -22,7 +20,7 @@ internal class Patch
 
     [HarmonyPatch(typeof(ZNet), nameof(ZNet.Shutdown))] [HarmonyPostfix]
     [HarmonyPatch(typeof(ZNet), nameof(ZNet.Awake))]
-    public static void ZNet_SaveTime(ZNet __instance)
+    private static void ZNet_SaveTime(ZNet __instance)
     {
         if (!ZNet.instance.IsServer()) return;
         __instance.StartCoroutine(Reseter.SaveTime());

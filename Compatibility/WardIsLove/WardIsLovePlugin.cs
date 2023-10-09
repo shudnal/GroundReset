@@ -1,7 +1,7 @@
 ﻿using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 
-namespace Compatibility.WardIsLove;
+namespace GroundReset.Compatibility.WardIsLove;
 
 public class WardIsLovePlugin : ModCompat
 {
@@ -19,5 +19,10 @@ public class WardIsLovePlugin : ModCompat
     public static ConfigEntry<bool> WardEnabled()
     {
         return GetField<ConfigEntry<bool>>(ClassType(), null, "WardEnabled");
+    }
+
+    public static ConfigEntry<float> WardRange()
+    {
+        return GetField<ConfigEntry<float>>(ClassType(), null, "WardRange");
     }
 }

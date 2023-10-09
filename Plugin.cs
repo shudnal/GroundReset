@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Configuration;
-using CodeMonkey.Utils;
 using UnityEngine.SceneManagement;
 
 namespace GroundReset;
@@ -11,7 +10,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.0.0",
+        ModVersion = "2.0.1",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -30,8 +29,6 @@ public class Plugin : BaseUnityPlugin
     // internal static float fuckingBugDistance;
     internal static float savedTimeUpdateInterval;
 
-    internal static ConfigEntry<bool> pokeCompConfig;
-
     private void Awake()
     {
         CreateMod(this, ModName, ModAuthor, ModVersion);
@@ -43,10 +40,7 @@ public class Plugin : BaseUnityPlugin
         timePassedInMinutesConfig = mod.config("DO NOT TOUCH", "time has passed since the last trigger", 0f,
             new ConfigDescription("", null,
                 new ConfigurationManagerAttributes { Browsable = false }));
-
-        pokeCompConfig = mod.config("General", "pokeCompConfig", false, "");
-
-
+        
         onTimer += () => Reseter.ResetAllTerrains();
     }
 

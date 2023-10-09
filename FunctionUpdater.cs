@@ -10,7 +10,7 @@
     --------------------------------------------------
  */
 
-namespace CodeMonkey.Utils;
+namespace GroundReset;
 
 /*
  * Calls function on every Update until it returns true
