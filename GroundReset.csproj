@@ -110,8 +110,9 @@
         </PropertyGroup>
         <Error Condition="!Exists('packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets'))"/>
     </Target>
-    <Target Name="CopyDLL" AfterTargets="ILRepack">
-        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim\BepInEx\plugins"/>
+	<Target Name="CopyDLL" AfterTargets="Build">
+        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Slava\Coding\_Publish\Frogger-$(ProjectName)" />
+        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim\BepInEx\plugins" />
         <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim dedicated server\BepInEx\plugins"/>
     </Target>
 </Project>
