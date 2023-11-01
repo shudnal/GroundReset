@@ -20,22 +20,17 @@ namespace GroundReset.Patch;
     private static void AddWard(string name)
     {
         var prefab = ZNetScene.instance.GetPrefab(name.GetStableHashCode());
-        if (prefab)
-        {
-            var areaComponent = prefab.GetComponent<PrivateArea>();
-            Reseter.wardsSettingsList.Add(new WardSettings(
-                name,
-                areaComponent.m_radius));
-        }
+        if (!prefab) return;
+
+        var areaComponent = prefab.GetComponent<PrivateArea>();
+        Reseter.wardsSettingsList.Add(new WardSettings(name, areaComponent.m_radius));
     }
 
     private static void AddWardThorward()
     {
         var name = "Thorward";
         var prefab = ZNetScene.instance.GetPrefab(name.GetStableHashCode());
-        if (prefab)
-            Reseter.wardsSettingsList.Add(new WardSettings(
-                name,
-                WardIsLovePlugin.WardRange().Value));
+        if (!prefab) return;
+        Reseter.wardsSettingsList.Add(new WardSettings(name, WardIsLovePlugin.WardRange().Value));
     }
 }

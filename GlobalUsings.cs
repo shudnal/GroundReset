@@ -7,7 +7,6 @@ global using UnityEngine;
 global using static UnityEngine.Object;
 global using Object = UnityEngine.Object;
 global using Random = UnityEngine.Random;
-global using static UnityEngine.ScriptableObject;
 global using ScriptableObject = UnityEngine.ScriptableObject;
 global using static UnityEngine.ScriptableObject;
 global using JFUtils;

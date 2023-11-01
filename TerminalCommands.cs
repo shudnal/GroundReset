@@ -11,11 +11,12 @@ public static class TerminalCommands
         new ConsoleCommand("ResetAllChunks",
             "Resets all chunks in world. ResetAllChunks [check wards]", args =>
             {
-                mod.RunCommand(args =>
+                RunCommand(args =>
                 {
-                    if (!mod.IsAdmin) throw new Exception("You are not an admin on this server");
+                    if (!IsAdmin) throw new ConsoleCommandException("You are not an admin on this server");
                     if (args.Length < 2 || !bool.TryParse(args[1], out var checkWards))
-                        throw new ConsoleException("First argument - checkWards - must be a boolean: true or false");
+                        throw new ConsoleCommandException(
+                            "First argument - checkWards - must be a boolean: true or false");
                     Reseter.ResetAllTerrains(false, checkWards);
 
                     args.Context.AddString("Processing...");
@@ -26,9 +27,9 @@ public static class TerminalCommands
             "", args =>
             {
                 var terrCompHash = "_TerrainCompiler".GetStableHashCode();
-                mod.RunCommand(args =>
+                RunCommand(args =>
                 {
-                    if (!mod.IsAdmin) throw new Exception("You are not an admin on this server");
+                    if (!IsAdmin) throw new ConsoleCommandException("You are not an admin on this server");
 
                     args.Context.AddString("Processing...");
                     var zdos = ZDOMan.instance.m_objectsByID.Values.Where(x => x.GetPrefab() == terrCompHash).ToList();
@@ -40,7 +41,7 @@ public static class TerminalCommands
         new ConsoleCommand("InsidePlayerArea",
             "", args =>
             {
-                mod.RunCommand(args =>
+                RunCommand(args =>
                 {
                     args.Context.AddString(PrivateArea.InsideFactionArea(Player.m_localPlayer.transform.position,
                         Character.Faction.Players)
@@ -49,13 +50,7 @@ public static class TerminalCommands
                 }, args);
             }, true);
         new ConsoleCommand("GoThroughHeightmap",
-            "", args =>
-            {
-                mod.RunCommand(args =>
-                {
-                    GoThroughHeightmap();
-                }, args);
-            }, true);
+            "", args => RunCommand(args => GoThroughHeightmap(), args), true);
     }
 
     private static async void GoThroughHeightmap()

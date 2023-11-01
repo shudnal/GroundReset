@@ -19,7 +19,7 @@ internal static class Reseter
     {
         var watch = new Stopwatch();
         watch.Restart();
-        var result = await instance.GetWorldObjectsInAreaAsync(terrCompPrefabName, zdo =>
+        var result = await instance.GetWorldObjectsAsync(terrCompPrefabName, zdo =>
         {
             var flag = true;
             if (checkIfNeed) flag = IsNeedToReset(zdo);
@@ -30,7 +30,7 @@ internal static class Reseter
         for (var i = 0; i < wardsSettingsList.Count; i++)
         {
             var wardsSettings = wardsSettingsList[i];
-            var zdos = await instance.GetWorldObjectsInAreaAsync(wardsSettings.prefabName);
+            var zdos = await instance.GetWorldObjectsAsync(wardsSettings.prefabName);
             wards = wards.Concat(zdos).ToList();
         }
 
@@ -61,7 +61,7 @@ internal static class Reseter
         return !flag;
     }
 
-    private static async void ResetTerrainComp(ZDO zdo, bool checkWards)
+    private static void ResetTerrainComp(ZDO zdo, bool checkWards)
     {
         var resets = 0;
         var zoneCenter = instance.GetZonePos(instance.GetZone(zdo.GetPosition()));
@@ -223,7 +223,7 @@ internal static class Reseter
         {
             var wardSettings =
                 wardsSettingsList.Find(s => s.prefabName.GetStableHashCode() == zdo1.GetPrefab());
-            var isEnabled = zdo1.GetBool(ZDOVars.s_enabled, false);
+            var isEnabled = zdo1.GetBool(ZDOVars.s_enabled);
             var radius = zdo1.GetFloat(RadiusNetKey, -1);
             if (radius == -1) radius = wardSettings.radius;
             var inRange = worldPos.DistanceXZ(zdo1.GetPosition()) <= radius;

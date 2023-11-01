@@ -31,29 +31,20 @@ public class Plugin : BaseUnityPlugin
 
     private void Awake()
     {
-        CreateMod(this, ModName, ModAuthor, ModVersion);
+        CreateMod(this, ModName, ModAuthor, ModVersion, ModGUID);
         OnConfigurationChanged += UpdateConfiguration;
 
-        timeInMinutesConfig = mod.config("General", "TheTriggerTime", 4320f, "");
-        // fuckingBugDistanceConfig = mod.config("General", "Fucking Bug Distance", 115f, "");
-        savedTimeUpdateIntervalConfig = mod.config("General", "SavedTime Update Interval (seconds)", 120f, "");
-        timePassedInMinutesConfig = mod.config("DO NOT TOUCH", "time has passed since the last trigger", 0f,
+        timeInMinutesConfig = config("General", "TheTriggerTime", 4320f, "");
+        savedTimeUpdateIntervalConfig = config("General", "SavedTime Update Interval (seconds)", 120f, "");
+        timePassedInMinutesConfig = config("DO NOT TOUCH", "time has passed since the last trigger", 0f,
             new ConfigDescription("", null,
                 new ConfigurationManagerAttributes { Browsable = false }));
-        
-        onTimer += () => Reseter.ResetAllTerrains();
-    }
 
-    public void RPC_ResetTerrain(long _)
-    {
-        lastReset = DateTime.Now;
-        FunctionTimer.Create(onTimer, timeInMinutes * 60, "JF_GroundReset", true, true);
-        timePassedInMinutes = 0;
-        Config.Reload();
-        Debug($"Подготовка к сбросу территории {DateTime.Now}");
-        if (!ZNet.m_isServer)
-            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft,
-                "<color=yellow>Подготовка к сбросу территории</color>");
+        onTimer += () =>
+        {
+            Debug("Timer Triggered, Resetting...");
+            Reseter.ResetAllTerrains();
+        };
     }
 
     private void UpdateConfiguration()
