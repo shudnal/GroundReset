@@ -67,7 +67,6 @@ public class FunctionTimer
     public static FunctionTimer Create(Action action, float timer, string functionName, bool useUnscaledDeltaTime,
         bool stopAllWithSameName)
     {
-        Debug("Trying to create timer");
         if (!ZNet.m_isServer) return null;
         InitIfNeeded();
 
@@ -80,7 +79,7 @@ public class FunctionTimer
         timerList.Add(funcTimer);
 
         Plugin.timer = funcTimer;
-        Debug($"Timer 'JF_GroundReset' was successfully created. Timer interval was set to {timer}");
+        Debug($"Timer was successfully created. Interval was set to {timer} seconds.");
         return funcTimer;
     }
 

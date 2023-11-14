@@ -112,7 +112,6 @@
     </Target>
     <Target Name="CopyDLL" AfterTargets="Build">
         <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Slava\Coding\_Publish\Frogger-$(ProjectName)"/>
-        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim\BepInEx\plugins"/>
         <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="D:\Steam\steamapps\common\Valheim dedicated server\BepInEx\plugins"/>
     </Target>
 </Project>

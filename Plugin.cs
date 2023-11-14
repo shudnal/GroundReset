@@ -2,7 +2,6 @@
 using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine.SceneManagement;
-
 namespace GroundReset;
 
 [BepInPlugin(ModGUID, ModName, ModVersion)]
@@ -10,7 +9,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.0.1",
+        ModVersion = "2.1.0",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -40,32 +39,34 @@ public class Plugin : BaseUnityPlugin
             new ConfigDescription("", null,
                 new ConfigurationManagerAttributes { Browsable = false }));
 
-        onTimer += () =>
+        onTimer += () => 
         {
             Debug("Timer Triggered, Resetting...");
             Reseter.ResetAllTerrains();
+            lastReset = DateTime.Now;
+            InitTimer();
         };
     }
 
     private void UpdateConfiguration()
     {
-        Task task = null;
-        task = Task.Run(() =>
+        Task.Run(() =>
         {
-            if (timeInMinutes != -1 && timeInMinutes != timeInMinutesConfig.Value &&
-                SceneManager.GetActiveScene().name == "main")
-            {
-                FunctionTimer.StopAllTimersWithName("JF_GroundReset");
-                FunctionTimer.Create(onTimer, timeInMinutes * 60, "JF_GroundReset", true, true);
-            }
+            if (Math.Abs(timeInMinutes - timeInMinutesConfig.Value) > 1f
+                && SceneManager.GetActiveScene().name == "main") InitTimer();
 
             timeInMinutes = timeInMinutesConfig.Value;
             timePassedInMinutes = timePassedInMinutesConfig.Value;
-            //   fuckingBugDistance = fuckingBugDistanceConfig.Value;
             savedTimeUpdateInterval = savedTimeUpdateIntervalConfig.Value;
         });
 
         Task.WaitAll();
         Debug("Configuration Received");
+    }
+
+    private static void InitTimer()
+    {
+        FunctionTimer.StopAllTimersWithName("JF_GroundReset");
+        FunctionTimer.Create(onTimer, timeInMinutesConfig.Value * 60, "JF_GroundReset", true, true);
     }
 }

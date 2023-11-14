@@ -25,6 +25,7 @@ internal static class Reseter
             if (checkIfNeed) flag = IsNeedToReset(zdo);
             return flag;
         });
+        Debug($"Found {result.Count} chunks to reset");
 
         wards = new List<ZDO>();
         for (var i = 0; i < wardsSettingsList.Count; i++)
@@ -54,7 +55,7 @@ internal static class Reseter
 
     private static bool IsNeedToReset(ZDO zdo)
     {
-        var savedTime = zdo.GetString($"{ModName} time");
+        var savedTime = zdo.GetString($"{ModName} time", DateTime.MinValue.ToString());
         if (!savedTime.IsGood()) return false;
 
         var flag = savedTime == lastReset.ToString();
@@ -63,7 +64,6 @@ internal static class Reseter
 
     private static void ResetTerrainComp(ZDO zdo, bool checkWards)
     {
-        var resets = 0;
         var zoneCenter = instance.GetZonePos(instance.GetZone(zdo.GetPosition()));
 
         var data = LoadOldData(zdo);
@@ -77,7 +77,6 @@ internal static class Reseter
             if (!data.m_modifiedHeight[idx]) continue;
             if (checkWards && IsInWard(zoneCenter, w, h)) continue;
 
-            resets++;
             data.m_modifiedHeight[idx] = false;
             data.m_levelDelta[idx] = 0;
             data.m_smoothDelta[idx] = 0;
