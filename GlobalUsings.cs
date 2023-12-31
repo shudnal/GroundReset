@@ -23,3 +23,4 @@ global using static GroundReset.Plugin;
 global using static BepInEx.BepInDependency;
 global using static Skills;
 global using ConsoleCommand = Terminal.ConsoleCommand;
+global using static UnityEngine.Mathf;

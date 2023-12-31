@@ -2,6 +2,7 @@
 using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine.SceneManagement;
+
 namespace GroundReset;
 
 [BepInPlugin(ModGUID, ModName, ModVersion)]
@@ -9,7 +10,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.1.0",
+        ModVersion = "2.2.0",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -17,15 +18,12 @@ public class Plugin : BaseUnityPlugin
     internal static FunctionTimer timer;
 
     internal static ConfigEntry<float> timeInMinutesConfig;
-
     internal static ConfigEntry<float> timePassedInMinutesConfig;
-
     internal static ConfigEntry<float> savedTimeUpdateIntervalConfig;
+    internal static ConfigEntry<float> dividerConfig;
+    internal static ConfigEntry<float> minHeightToSteppedResetConfig;
     internal static float timeInMinutes = -1;
-
     internal static float timePassedInMinutes;
-
-    // internal static float fuckingBugDistance;
     internal static float savedTimeUpdateInterval;
 
     private void Awake()
@@ -34,12 +32,15 @@ public class Plugin : BaseUnityPlugin
         OnConfigurationChanged += UpdateConfiguration;
 
         timeInMinutesConfig = config("General", "TheTriggerTime", 4320f, "");
+        dividerConfig = config("General", "Divider", 1.7f, "");
+        minHeightToSteppedResetConfig = config("General", "Min Height To Stepped Reset", 0.2f,
+            "If the height is lower than this value, the terrain will be reset instantly.");
         savedTimeUpdateIntervalConfig = config("General", "SavedTime Update Interval (seconds)", 120f, "");
         timePassedInMinutesConfig = config("DO NOT TOUCH", "time has passed since the last trigger", 0f,
             new ConfigDescription("", null,
                 new ConfigurationManagerAttributes { Browsable = false }));
 
-        onTimer += () => 
+        onTimer += () =>
         {
             Debug("Timer Triggered, Resetting...");
             Reseter.ResetAllTerrains();

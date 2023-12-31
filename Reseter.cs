@@ -6,7 +6,6 @@ internal static class Reseter
 {
     private const string terrCompPrefabName = "_TerrainCompiler";
     private static readonly int RadiusNetKey = "wardRadius".GetStableHashCode();
-    private static int FactionNetKey = "faction".GetStableHashCode();
 
     internal static readonly int HeightmapWidth = 64;
     internal static readonly int HeightmapScale = 1;
@@ -34,6 +33,8 @@ internal static class Reseter
             var zdos = await instance.GetWorldObjectsAsync(wardsSettings.prefabName);
             wards = wards.Concat(zdos).ToList();
         }
+
+        DebugWarning($"wards count: {wards.Count}");
 
         var resets = 0;
         if (result.Count > 0)
@@ -64,6 +65,8 @@ internal static class Reseter
 
     private static void ResetTerrainComp(ZDO zdo, bool checkWards)
     {
+        float divider = dividerConfig.Value;
+        float minHeightToSteppedReset = minHeightToSteppedResetConfig.Value;
         var zoneCenter = instance.GetZonePos(instance.GetZone(zdo.GetPosition()));
 
         var data = LoadOldData(zdo);
@@ -77,9 +80,16 @@ internal static class Reseter
             if (!data.m_modifiedHeight[idx]) continue;
             if (checkWards && IsInWard(zoneCenter, w, h)) continue;
 
-            data.m_modifiedHeight[idx] = false;
-            data.m_levelDelta[idx] = 0;
-            data.m_smoothDelta[idx] = 0;
+            DebugWarning($"Resetting {w} {h}. height={data.m_modifiedHeight[idx]}, "
+                         + $"level={data.m_levelDelta[idx]}, smooth={data.m_smoothDelta[idx]}");
+            data.m_levelDelta[idx] /= divider;
+            data.m_smoothDelta[idx] /= divider;
+            if (data.m_levelDelta[idx] < minHeightToSteppedReset) data.m_levelDelta[idx] = 0;
+            if (data.m_smoothDelta[idx] < minHeightToSteppedReset) data.m_smoothDelta[idx] = 0;
+            data.m_modifiedHeight[idx] = data.m_levelDelta[idx] != 0;
+
+            DebugWarning($"Reset {w} {h} result: height={data.m_modifiedHeight[idx]}, "
+                         + $"level={data.m_levelDelta[idx]}, smooth={data.m_smoothDelta[idx]}");
         }
 
         num = HeightmapWidth;
