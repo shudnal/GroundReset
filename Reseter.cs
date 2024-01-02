@@ -19,7 +19,6 @@ public static class Reseter
     {
         await FindWards();
         await Terrains.ResetTerrains(checkWards);
-        await Locations.ResetLocations(checkWards);
 
         if (ranFromConsole) Console.instance.AddString("<color=green> Done </color>");
         wards.Clear();

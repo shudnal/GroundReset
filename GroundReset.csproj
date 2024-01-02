@@ -83,7 +83,6 @@
         <Compile Include="FunctionTimer.cs"/>
         <Compile Include="FunctionUpdater.cs"/>
         <Compile Include="GlobalUsings.cs"/>
-        <Compile Include="Locations.cs" />
         <Compile Include="Patch\InitWardsSettings.cs"/>
         <Compile Include="Patch\StartTimer.cs"/>
         <Compile Include="Plugin.cs"/>
