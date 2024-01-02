@@ -72,25 +72,21 @@ public static class Locations
         var zdosInWorld = await ZoneSystem.instance.GetWorldObjectsAsync(searchZdo =>
         {
             if (!locationPrefabZViewNames.Contains(searchZdo.GetPrefab())) return false;
-            var searchZdoPositionAbs = searchZdo.GetPosition().abs();
-            var locationPositionAbs = locationPosition.abs();
-            var searchZdoPosition_byLoc = (searchZdoPositionAbs - locationPositionAbs).abs();
+            var searchZdoPosition = searchZdo.GetPosition();
+            var searchZdoPosition_byLoc = (searchZdoPosition.abs() - locationPosition.abs()).abs();
             if (searchZdoPosition_byLoc.magnitude > locationRange) return false;
-            var zViewInLocation = locationPrefabZView.Find(x =>
+            Vector3 cloneChildPosition = searchZdo.GetPosition();
+            Quaternion cloneChildRotation = searchZdo.GetRotation();
+
+            var zViewInLocation = locationPrefabZView.Find(prefabChild =>
             {
-                var prefabName = x.GetPrefabName();
+                Transform prefabChildTransform = prefabChild.transform;
+                var prefabName = prefabChild.GetPrefabName();
                 if (prefabName.GetStableHashCode() != searchZdo.GetPrefab()) return false;
                 DebugWarning($"zViewInLocation finding, prefabName is okay: {prefabName}");
-                var zViewInLocationLocalPositionAbs = x.transform.localPosition.abs();
-                var deltaX = Abs(zViewInLocationLocalPositionAbs.x - searchZdoPosition_byLoc.x);
-                var deltaZ = Abs(zViewInLocationLocalPositionAbs.z - searchZdoPosition_byLoc.z);
-                var distanceIsOkay = deltaX <= 0.2f && deltaZ <= 0.2f;
-                DebugWarning(
-                        $"deltaX: {deltaX}, deltaZ: {deltaZ}\n"
-                        + $"zViewInLocationLocalPositionAbs: {zViewInLocationLocalPositionAbs}"
-                        + $"searchZdoPosition_byLoc: {searchZdoPosition_byLoc}\n" 
-                        + $"location rotation: {searchZdo.GetRotation()}"
-                    );
+
+                var distanceIsOkay = CompareTransform(prefabChildTransform, cloneChildPosition, cloneChildRotation);
+
                 if (!distanceIsOkay) return false;
                 return true;
             });
@@ -106,5 +102,35 @@ public static class Locations
 
 
         return true;
+    }
+
+    private static bool CompareTransform(Transform prefabChildTransform, Vector3 cloneChildPosition,
+        Quaternion cloneChildRotation)
+    {
+        float tolerance = 0.2f;
+        Transform tempTransform = new GameObject("TempTransform").transform;
+        tempTransform.position = cloneChildPosition;
+        tempTransform.rotation = cloneChildRotation;
+
+        // Преобразование локальных координат prefabChild в мировые, относительно временного трансформа
+        Vector3 worldPositionPrefabChild = tempTransform.TransformPoint(prefabChildTransform.localPosition);
+
+        // Удаление временного объекта
+        Destroy(tempTransform.gameObject);
+
+        DebugWarning($""
+                     + $"tolerance: {tolerance}\n"
+                     + $"worldPositionPrefabChild: {worldPositionPrefabChild}\n"
+                     + $"cloneChildPosition: {cloneChildPosition}\n");
+        // Сравнение мировых позиций
+        if (worldPositionPrefabChild.DistanceXZ(cloneChildPosition) < tolerance)
+        {
+            DebugWarning("Позиции совпадают");
+            return true;
+        } else
+        {
+            DebugError("Позиции не совпадают");
+            return false;
+        }
     }
 }
