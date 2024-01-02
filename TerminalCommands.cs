@@ -17,7 +17,7 @@ public static class TerminalCommands
                     if (args.Length < 2 || !bool.TryParse(args[1], out var checkWards))
                         throw new ConsoleCommandException(
                             "First argument - checkWards - must be a boolean: true or false");
-                    Reseter.ResetAllTerrains(false, checkWards);
+                    Reseter.ResetAll(false, checkWards);
 
                     args.Context.AddString("Processing...");
                 }, args);
@@ -56,7 +56,8 @@ public static class TerminalCommands
     private static async void GoThroughHeightmap()
     {
         var comp = TerrainComp.FindTerrainCompiler(Player.m_localPlayer.transform.position);
-        var zoneCenter = instance.GetZonePos(instance.GetZone(comp.m_nview.GetZDO().GetPosition()));
+        var zoneCenter =
+            ZoneSystem.instance.GetZonePos(ZoneSystem.instance.GetZone(comp.m_nview.GetZDO().GetPosition()));
         var skyLine = new GameObject("SkyLine").AddComponent<LineRenderer>();
         skyLine.positionCount = 2;
         skyLine.material = new Material(Shader.Find("Unlit/Color"));
@@ -68,7 +69,7 @@ public static class TerminalCommands
         for (var w = 0; w < num; w++)
         {
             var idx = h * num + w;
-            var worldPos = Reseter.VertexToWorld(zoneCenter, w, h);
+            var worldPos = Reseter.HmapToWorld(zoneCenter, w, h);
             var inWard = PrivateArea.InsideFactionArea(worldPos, Character.Faction.Players);
             skyLine.material.color = !inWard ? Color.green : Color.red;
             skyLine.SetPosition(0, worldPos);

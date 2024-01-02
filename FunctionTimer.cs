@@ -1,4 +1,4 @@
-/* 
+/*
     ------------------- Code Monkey -------------------
 
     Thank you for downloading the Code Monkey Utilities
@@ -13,7 +13,7 @@
 namespace GroundReset;
 
 /*
- * Triggers a Action after a certain time 
+ * Triggers a Action after a certain time
  * */
 public class FunctionTimer
 {

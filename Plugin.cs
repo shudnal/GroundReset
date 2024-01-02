@@ -10,11 +10,10 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.2.0",
+        ModVersion = "2.3.0",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
-    internal static DateTime lastReset = DateTime.MinValue;
     internal static FunctionTimer timer;
 
     internal static ConfigEntry<float> timeInMinutesConfig;
@@ -43,8 +42,7 @@ public class Plugin : BaseUnityPlugin
         onTimer += () =>
         {
             Debug("Timer Triggered, Resetting...");
-            Reseter.ResetAllTerrains();
-            lastReset = DateTime.Now;
+            Reseter.ResetAll();
             InitTimer();
         };
     }
