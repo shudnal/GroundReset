@@ -29,7 +29,7 @@ public static class Locations
 
         var totalSeconds = TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds).TotalSeconds;
         DebugWarning($"{resets} locations been reset. Took {totalSeconds} seconds");
-        watch.Restart();
+        watch.Reset();
 
         return resets;
     }
@@ -75,62 +75,15 @@ public static class Locations
             var searchZdoPosition = searchZdo.GetPosition();
             var searchZdoPosition_byLoc = (searchZdoPosition.abs() - locationPosition.abs()).abs();
             if (searchZdoPosition_byLoc.magnitude > locationRange) return false;
-            Vector3 cloneChildPosition = searchZdo.GetPosition();
-            Quaternion cloneChildRotation = searchZdo.GetRotation();
-
-            var zViewInLocation = locationPrefabZView.Find(prefabChild =>
-            {
-                Transform prefabChildTransform = prefabChild.transform;
-                var prefabName = prefabChild.GetPrefabName();
-                if (prefabName.GetStableHashCode() != searchZdo.GetPrefab()) return false;
-                DebugWarning($"zViewInLocation finding, prefabName is okay: {prefabName}");
-
-                var distanceIsOkay = CompareTransform(prefabChildTransform, cloneChildPosition, cloneChildRotation);
-
-                if (!distanceIsOkay) return false;
-                return true;
-            });
-            // if (zViewInLocation)
-            DebugWarning(
-                $"zViewInLocation for location {location.m_prefabName} {(zViewInLocation is null ? "NOT found" : "found")}");
-
             return true;
         });
+        
+        
 
         if (zdosInWorld.Count > 0)
             DebugWarning($"Found {zdosInWorld.Count} ZDOs in world for location '{location.m_prefabName}'");
 
 
         return true;
-    }
-
-    private static bool CompareTransform(Transform prefabChildTransform, Vector3 cloneChildPosition,
-        Quaternion cloneChildRotation)
-    {
-        float tolerance = 0.2f;
-        Transform tempTransform = new GameObject("TempTransform").transform;
-        tempTransform.position = cloneChildPosition;
-        tempTransform.rotation = cloneChildRotation;
-
-        // Преобразование локальных координат prefabChild в мировые, относительно временного трансформа
-        Vector3 worldPositionPrefabChild = tempTransform.TransformPoint(prefabChildTransform.localPosition);
-
-        // Удаление временного объекта
-        Destroy(tempTransform.gameObject);
-
-        DebugWarning($""
-                     + $"tolerance: {tolerance}\n"
-                     + $"worldPositionPrefabChild: {worldPositionPrefabChild}\n"
-                     + $"cloneChildPosition: {cloneChildPosition}\n");
-        // Сравнение мировых позиций
-        if (worldPositionPrefabChild.DistanceXZ(cloneChildPosition) < tolerance)
-        {
-            DebugWarning("Позиции совпадают");
-            return true;
-        } else
-        {
-            DebugError("Позиции не совпадают");
-            return false;
-        }
     }
 }

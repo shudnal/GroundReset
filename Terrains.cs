@@ -14,7 +14,7 @@ public static class Terrains
         var resets = 0;
         foreach (var zdo in zdos)
         {
-            Terrains.ResetTerrainComp(zdo, checkWards);
+            ResetTerrainComp(zdo, checkWards);
             resets++;
         }
 
