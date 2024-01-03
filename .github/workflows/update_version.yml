@@ -26,8 +26,8 @@ jobs:
 
     - name: Commit and push if changed
       run: |
-        git config --global user.email "you@example.com"
-        git config --global user.name "Your Name"
+        git config --global user.email "slava.shilin07@mail.ru"
+        git config --global user.name "Vyacheslav"
         git diff
         git commit -am "Update version badge"
         git push
