@@ -26,4 +26,4 @@ jobs:
         git commit -am "Update version badge"
         git push
       env:
-        GITHUB_TOKEN: ${{ secrets.Commits_Token }}
+        GITHUB_TOKEN: ${{ secrets.COMMITS_TOKEN }}
