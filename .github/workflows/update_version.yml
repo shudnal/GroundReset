@@ -1,0 +1,33 @@
+name: Update Version Badge
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Plugin.cs'
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Extract version and update README
+      run: |
+        # Используйте скрипт для извлечения версии
+        VERSION=$(python extract_version.py)
+        echo "Current version: $VERSION"
+        
+        # Обновление бэджа в README.md
+        sed -i "s/\(Version-\).*/\1$VERSION-blue.svg)/" README.md
+
+    - name: Commit and push if changed
+      run: |
+        git config --global user.email "you@example.com"
+        git config --global user.name "Your Name"
+        git diff
+        git commit -am "Update version badge"
+        git push
