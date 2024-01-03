@@ -72,6 +72,9 @@
         <Reference Include="UnityEngine.UI">
             <HintPath>..\..\..\Steam\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.UI.dll</HintPath>
         </Reference>
+        <Reference Include="YamlDotNet, Version=13.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+          <HintPath>packages\YamlDotNet.13.7.1\lib\net47\YamlDotNet.dll</HintPath>
+        </Reference>
     </ItemGroup>
     <ItemGroup>
         <Compile Include="ChunkData.cs"/>
@@ -80,10 +83,21 @@
         <Compile Include="Compatibility\WardIsLove\WardIsLovePlugin.cs"/>
         <Compile Include="Compatibility\WardIsLove\WardMonoscript.cs"/>
         <Compile Include="Compatibility\WardIsLove\WardMonoscriptExt.cs"/>
+        <Compile Include="DiscordMessenger\Author.cs" />
+        <Compile Include="DiscordMessenger\Discord.cs" />
+        <Compile Include="DiscordMessenger\DiscordMessage.cs" />
+        <Compile Include="DiscordMessenger\Embed.cs" />
+        <Compile Include="DiscordMessenger\Field.cs" />
+        <Compile Include="DiscordMessenger\Footer.cs" />
+        <Compile Include="DiscordMessenger\Image.cs" />
+        <Compile Include="DiscordMessenger\Provider.cs" />
+        <Compile Include="DiscordMessenger\Thumbnail.cs" />
+        <Compile Include="DiscordMessenger\Video.cs" />
         <Compile Include="FunctionTimer.cs"/>
         <Compile Include="FunctionUpdater.cs"/>
         <Compile Include="GlobalUsings.cs"/>
         <Compile Include="Patch\InitWardsSettings.cs"/>
+        <Compile Include="Patch\SendStartMessage.cs" />
         <Compile Include="Patch\StartTimer.cs"/>
         <Compile Include="Plugin.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
