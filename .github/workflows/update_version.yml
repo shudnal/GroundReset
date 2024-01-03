@@ -7,7 +7,6 @@ on:
 jobs:
   update_version:
     runs-on: ubuntu-latest
-
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
@@ -26,3 +25,5 @@ jobs:
         git diff
         git commit -am "Update version badge"
         git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.Commits_Token }}
