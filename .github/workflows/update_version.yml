@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
-
+      
     - name: Extract version and update README
       run: |
         VERSION=$(python extract_version.py)
