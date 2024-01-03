@@ -14,6 +14,7 @@ jobs:
     - name: Extract version and update README
       run: |
         VERSION=$(python extract_version.py)
+        echo "Got version from python, version is ${VERSION}"
         sed -i "s/badge\/version-[^-]*-[^-]*\.svg/badge\/version-$VERSION-blue.svg/" README.md
       env:
         GITHUB_TOKEN: ${{ github.token }}
