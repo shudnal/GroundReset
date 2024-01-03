@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'Plugin.cs'
-
 jobs:
   update_version:
     runs-on: ubuntu-latest
