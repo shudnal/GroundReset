@@ -8,9 +8,12 @@ def get_version_from_github(file_url):
         content = response.text
 
         version_line = re.search(r'ModVersion = "(\d+\.\d+\.\d+)"', content)
-        # replace "Current version: " in version_line to ""
+        version_line = version_line.group(1).replace("Current version: ", "")
+
+        print(f'version_line = _{version_line}_')
+
         if version_line:
-            return version_line.group(1).replace("Current version: ", "")
+            return version_line
         else:
             return "Version not found"
     except Exception as e:
