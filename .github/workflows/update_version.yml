@@ -17,12 +17,10 @@ jobs:
 
     - name: Extract version and update README
       run: |
-        # Используйте скрипт для извлечения версии
         VERSION=$(python extract_version.py)
         echo "Current version: $VERSION"
         
-        # Обновление бэджа в README.md
-        sed -i "s/\(Version-\).*/\1$VERSION-blue.svg)/" README.md
+        sed -i "s/badge\/version-[^-]*-[^-]*\.svg/badge\/version-$VERSION-blue.svg/" README.md
 
     - name: Commit and push if changed
       run: |
