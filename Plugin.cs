@@ -11,7 +11,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.8.5",
+        ModVersion = "2.3.1",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
