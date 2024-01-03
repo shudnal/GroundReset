@@ -18,4 +18,4 @@ def get_version_from_github(file_url):
 
 file_url = 'https://raw.githubusercontent.com/FroggerHH/GroundReset/main/Plugin.cs'
 version = get_version_from_github(file_url)
-print(f"Current version: {version}")
+print(version)
