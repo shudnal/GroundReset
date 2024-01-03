@@ -1,5 +1,5 @@
 # GroundReset 
-![Version Badge](https://img.shields.io/badge/version-2.3.1-blue.svg)
+![Version Badge](https://img.shields.io/badge/version-2.8.5-blue.svg)
 
 Автоматически постепенно сбрасывает рельеф местности по всей карте с учетом оберегов игроков.
 
