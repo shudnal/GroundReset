@@ -15,7 +15,7 @@ jobs:
     - name: Extract version and update README
       run: |
         VERSION=$(python extract_version.py)
-        echo "Current version: $VERSION"
+        echo "Current version: '$VERSION'"
         
         sed -i "s/badge\/version-[^-]*-[^-]*\.svg/badge\/version-$VERSION-blue.svg/" README.md
 
