@@ -17,9 +17,12 @@ jobs:
         echo "Current version: '$VERSION'"
         
         sed -i "s/badge\/version-[^-]*-[^-]*\.svg/badge\/version-$VERSION-blue.svg/" README.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.COMMITS_TOKEN }}
 
     - name: Commit and push if changed
       run: |
+        echo "Committing changes..., token: ${{ secrets.COMMITS_TOKEN }}"
         git config --global user.email "slava.shilin07@mail.ru"
         git config --global user.name "Vyacheslav"
         git diff
