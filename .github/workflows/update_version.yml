@@ -18,7 +18,7 @@ jobs:
         
         sed -i "s/badge\/version-[^-]*-[^-]*\.svg/badge\/version-$VERSION-blue.svg/" README.md
       env:
-        GITHUB_TOKEN: ${{ secrets.COMMITS_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Commit and push if changed
       run: |
