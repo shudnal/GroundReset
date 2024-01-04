@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Threading.Tasks;
+using GroundReset.Compatibility.kgMarketplace;
 
 namespace GroundReset;
 
@@ -64,7 +65,7 @@ public static class Reseter
 
     public static bool IsInWard(Vector3 pos, float checkRadius)
     {
-        return wards.Exists(searchWard =>
+        var exists = wards.Exists(searchWard =>
         {
             var wardSettings =
                 wardsSettingsList.Find(s => s.prefabName.GetStableHashCode() == searchWard.GetPrefab());
@@ -76,6 +77,9 @@ public static class Reseter
 
             return isEnabled && inRange;
         });
+        var inTerritory = MarketplaceTerritorySystem.PointInTerritory(pos);
+        DebugWarning($"IsInWard called, exists={exists}, inTerritory={inTerritory}");
+        return inTerritory || exists;
     }
 
     public static bool IsInWard(Vector3 zoneCenter, int w, int h) => IsInWard(HmapToWorld(zoneCenter, w, h), 0f);

@@ -1,23 +1,26 @@
-# GroundReset 
-![Version Badge](https://img.shields.io/badge/version-2.3.1-blue.svg)
+# GroundReset
 
-Автоматически постепенно сбрасывает рельеф местности по всей карте с учетом оберегов игроков.
+![Version Badge](https://img.shields.io/badge/version-2.3.1-green.svg)
 
-### About
-- Настройка времени сброса рельефа (TheTriggerTime).
-- Настройка степени возвращения рельефа к исходному состоянию (Divider).
-- Совместимость с оберегами из ванили и мода WardIsLove.
-- Создан по заказу и для VitByr и его сервера.
+Automatically and gradually resets the terrain across the map, taking into account player's protections.
 
-### Установка
-Требуется только на стороне сервера. Игрокам устанавливать мод не нужно.
+### Installation
 
-### Контакты
-Связаться со мной можно через Discord `justafrogger`<br>
-Страница на Thunderstore -
-<a href="https://valheim.thunderstore.io/package/Frogger/">
-<img src="https://gcdn.thunderstore.io/live/community/valheim/PNG_color_logo_only_1_transparent.png" alt="Thunderstore Logo" style="width: 15px">
-Thunderstore
-</a>
+Required only on the server side. Players do not need to install the mod.
 
-tesr
+### Configuration
+
+- Setting for the terrain reset time (TheTriggerTime).
+- Setting for the degree of terrain restoration to its original state (Divider).
+- Compatible with protections from vanilla and the WardIsLove mod.
+- Created by order and for VitByr and his server.
+
+### Contact
+
+You can contact me through Discord `justafrogger`<br>
+Me on Thunderstore - <a href="https://valheim.thunderstore.io/package/Frogger/">
+<img alt="Thunderstore Logo" src="https://gcdn.thunderstore.io/live/community/valheim/PNG_color_logo_only_1_transparent.png" width="14"/>
+Frrogger Mods</a><br>
+Mod page - <a href="https://valheim.thunderstore.io/package/Frogger/GroundReset/">
+<img alt="Thunderstore Logo" src="https://gcdn.thunderstore.io/live/community/valheim/PNG_color_logo_only_1_transparent.png" width="14"/>
+GroundReset</a>

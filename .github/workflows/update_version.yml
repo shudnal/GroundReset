@@ -10,18 +10,18 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
-      
+    
     - name: Extract version and update README
       run: |
         VERSION=$(python extract_version.py)
-        echo "Got version from python, version is ${VERSION}"
-        sed -i "s/badge\/version-[^-]*-[^-]*\.svg/badge\/version-$VERSION-blue.svg/" README.md
+        echo "Got version from python: ${VERSION}"
+        sed -i "s/badge\/version-[^-]*-[^-]*\.svg/badge\/version-$VERSION-green.svg/" README.md
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
     - name: Commit and push if changed
       run: |
-        echo "Committing changes..., token: ${{ secrets.COMMITS_TOKEN }}"
+        echo "Committing changes..."
         git config --global user.email "slava.shilin07@mail.ru"
         git config --global user.name "Vyacheslav"
         git diff

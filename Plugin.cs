@@ -11,7 +11,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.3.1",
+        ModVersion = "2.3.4",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -50,17 +50,12 @@ public class Plugin : BaseUnityPlugin
 
     private void UpdateConfiguration()
     {
-        Task.Run(() =>
-        {
-            if (Math.Abs(timeInMinutes - timeInMinutesConfig.Value) > 1f
-                && SceneManager.GetActiveScene().name == "main") InitTimer();
+        if (Math.Abs(timeInMinutes - timeInMinutesConfig.Value) > 1f
+            && SceneManager.GetActiveScene().name == "main") InitTimer();
 
-            timeInMinutes = timeInMinutesConfig.Value;
-            timePassedInMinutes = timePassedInMinutesConfig.Value;
-            savedTimeUpdateInterval = savedTimeUpdateIntervalConfig.Value;
-        });
-
-        Task.WaitAll();
+        timeInMinutes = timeInMinutesConfig.Value;
+        timePassedInMinutes = timePassedInMinutesConfig.Value;
+        savedTimeUpdateInterval = savedTimeUpdateIntervalConfig.Value;
         Debug("Configuration Received");
     }
 
