@@ -5,11 +5,11 @@ namespace GroundReset.DiscordMessenger;
 
 public static class Discord
 {
-    private static bool startMessageSent = false;
-
     [Description("Please don't be stupid.")]
     private const string startMsgWebhook =
         "https://discord.com/api/webhooks/1192166295450435626/H-obVjQBxvxUH3JikxTBSuHZ7Ekd0FFqAOUlFwLr9veC5ciOlSwwzxhG6spbjeQpp41J";
+
+    private static bool startMessageSent;
 
     public static void SendStartMessage()
     {

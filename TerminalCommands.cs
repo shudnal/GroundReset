@@ -17,7 +17,7 @@ public static class TerminalCommands
                     if (args.Length < 2 || !bool.TryParse(args[1], out var checkWards))
                         throw new ConsoleCommandException(
                             "First argument - checkWards - must be a boolean: true or false");
-                    Reseter.ResetAll(false, checkWards);
+                    ResetAll(false, checkWards);
 
                     args.Context.AddString("Processing...");
                 }, args);
@@ -64,12 +64,12 @@ public static class TerminalCommands
         skyLine.material.name = "UnlitColor Material";
         skyLine.material.color = Color.white;
 
-        var num = Reseter.HeightmapWidth + 1;
+        var num = HeightmapWidth + 1;
         for (var h = 0; h < num; h++)
         for (var w = 0; w < num; w++)
         {
             var idx = h * num + w;
-            var worldPos = Reseter.HmapToWorld(zoneCenter, w, h);
+            var worldPos = HmapToWorld(zoneCenter, w, h);
             var inWard = PrivateArea.InsideFactionArea(worldPos, Character.Faction.Players);
             skyLine.material.color = !inWard ? Color.green : Color.red;
             skyLine.SetPosition(0, worldPos);

@@ -65,22 +65,22 @@ public static class Reseter
 
     public static bool IsInWard(Vector3 pos, float checkRadius)
     {
-        var exists = wards.Exists(searchWard =>
+        return wards.Exists(searchWard =>
         {
             var wardSettings =
                 wardsSettingsList.Find(s => s.prefabName.GetStableHashCode() == searchWard.GetPrefab());
             var isEnabled = searchWard.GetBool(ZDOVars.s_enabled);
             var wardRadius = searchWard.GetFloat(RadiusNetKey, -1);
             if (wardRadius == -1) wardRadius = wardSettings.radius;
-            var inRange = pos.DistanceXZ(searchWard.GetPosition()) <= (wardRadius + checkRadius);
+            var inRange = pos.DistanceXZ(searchWard.GetPosition()) <= wardRadius + checkRadius;
             searchWard.Set(RadiusNetKey, wardRadius);
 
             return isEnabled && inRange;
-        });
-        var inTerritory = MarketplaceTerritorySystem.PointInTerritory(pos);
-        DebugWarning($"IsInWard called, exists={exists}, inTerritory={inTerritory}");
-        return inTerritory || exists;
+        }) || MarketplaceTerritorySystem.PointInTerritory(pos);
     }
 
-    public static bool IsInWard(Vector3 zoneCenter, int w, int h) => IsInWard(HmapToWorld(zoneCenter, w, h), 0f);
+    public static bool IsInWard(Vector3 zoneCenter, int w, int h)
+    {
+        return IsInWard(HmapToWorld(zoneCenter, w, h), 0f);
+    }
 }

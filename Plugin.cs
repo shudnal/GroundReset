@@ -1,7 +1,5 @@
-﻿using System.Threading.Tasks;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Configuration;
-using GroundReset.DiscordMessenger;
 using UnityEngine.SceneManagement;
 
 namespace GroundReset;
@@ -11,7 +9,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.3.4",
+        ModVersion = "2.4.0",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -43,7 +41,7 @@ public class Plugin : BaseUnityPlugin
         onTimer += () =>
         {
             Debug("Timer Triggered, Resetting...");
-            Reseter.ResetAll();
+            ResetAll();
             InitTimer();
         };
     }

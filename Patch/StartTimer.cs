@@ -23,6 +23,6 @@ namespace GroundReset.Patch;
     private static void ZNet_SaveTime(ZNet __instance)
     {
         if (!ZNet.instance.IsServer()) return;
-        __instance.StartCoroutine(Reseter.SaveTime());
+        __instance.StartCoroutine(SaveTime());
     }
 }

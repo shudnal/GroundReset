@@ -11,7 +11,7 @@ namespace GroundReset.Patch;
         if (SceneManager.GetActiveScene().name != "main") return;
         if (!ZNet.instance.IsServer()) return;
 
-        Reseter.wardsSettingsList = new List<WardSettings>();
+        wardsSettingsList = new List<WardSettings>();
 
         AddWard("guard_stone");
         AddWardThorward();
@@ -23,7 +23,7 @@ namespace GroundReset.Patch;
         if (!prefab) return;
 
         var areaComponent = prefab.GetComponent<PrivateArea>();
-        Reseter.wardsSettingsList.Add(new WardSettings(name, areaComponent.m_radius));
+        wardsSettingsList.Add(new WardSettings(name, areaComponent.m_radius));
     }
 
     private static void AddWardThorward()
@@ -31,6 +31,6 @@ namespace GroundReset.Patch;
         var name = "Thorward";
         var prefab = ZNetScene.instance.GetPrefab(name.GetStableHashCode());
         if (!prefab) return;
-        Reseter.wardsSettingsList.Add(new WardSettings(name, WardIsLovePlugin.WardRange().Value));
+        wardsSettingsList.Add(new WardSettings(name, WardIsLovePlugin.WardRange().Value));
     }
 }
