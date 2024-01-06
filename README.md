@@ -1,6 +1,6 @@
 # GroundReset
 
-![Version Badge](https://img.shields.io/badge/version-2.4.0-green.svg)
+![Version Badge](https://img.shields.io/badge/version-0.0.0-green.svg)
 
 Automatically and gradually resets the terrain across the map, taking into account player's protections.
 
@@ -24,5 +24,3 @@ Frrogger Mods</a><br>
 Mod page - <a href="https://valheim.thunderstore.io/package/Frogger/GroundReset/">
 <img alt="Thunderstore Logo" src="https://gcdn.thunderstore.io/live/community/valheim/PNG_color_logo_only_1_transparent.png" width="14"/>
 GroundReset</a>
-
-test
