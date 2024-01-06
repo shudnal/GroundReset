@@ -115,7 +115,6 @@
         <Compile Include="WardSettings.cs"/>
     </ItemGroup>
     <ItemGroup>
-        <Content Include="extract_version.py"/>
         <Content Include="ILRepack.targets"/>
         <Content Include="README.md"/>
     </ItemGroup>
