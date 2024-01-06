@@ -1,6 +1,6 @@
 # GroundReset
 
-![Version Badge](https://img.shields.io/badge/version-0.0.0-green.svg)
+![Version Badge](https://img.shields.io/badge/version-2.4.0-green.svg)
 
 Automatically and gradually resets the terrain across the map, taking into account player's protections.
 
