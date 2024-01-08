@@ -2,7 +2,7 @@
 
 # GroundReset
 
-![Version Badge](https://img.shields.io/badge/version-2.4.2-green.svg)
+![Version Badge](https://img.shields.io/badge/version-2.4.3-green.svg)
 
 Automatically and gradually resets the terrain across the map, taking into account player's wards.<br>
 Supports wards from vanilla and the WardIsLove mod.
