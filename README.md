@@ -114,3 +114,8 @@ GroundReset</a><br>
 GitHub - <a href="https://github.com/FroggerHH/GroundReset">
 <img alt="GitHub Logo" src="https://github.githubassets.com/assets/pinned-octocat-093da3e6fa40.svg" width="16"/>
 GroundReset</a><br>
+
+### Changelog
+2.4.1 - Possible error fix<br>
+2.4.2 - Thunderstore relese<br>
+2.4.3 - More info in README and configs<br>
