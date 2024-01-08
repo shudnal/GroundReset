@@ -9,7 +9,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.4.2",
+        ModVersion = "2.4.3",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -29,16 +29,15 @@ public class Plugin : BaseUnityPlugin
         CreateMod(this, ModName, ModAuthor, ModVersion, ModGUID);
         OnConfigurationChanged += UpdateConfiguration;
 
-        timeInMinutesConfig = config("General", "TheTriggerTime", 4320f, "Time in minutes before reset.");
+        timeInMinutesConfig = config("General", "TheTriggerTime", 4320f, "Time in real minutes between reset steps.");
         dividerConfig = config("General", "Divider", 1.7f,
-            "The divider for the terrain restoration. Current value will be divided by this value.");
+            "The divider for the terrain restoration. Current value will be divided by this value. Learn more on mod page.");
         minHeightToSteppedResetConfig = config("General", "Min Height To Stepped Reset", 0.2f,
-            "If the height is lower than this value, the terrain will be reset instantly.");
+            "If the height delta is lower than this value, it will be counted as zero.");
         savedTimeUpdateIntervalConfig = config("General", "SavedTime Update Interval (seconds)", 120f,
             "How often elapsed time will be saved to config file.");
         timePassedInMinutesConfig = config("DO NOT TOUCH", "time has passed since the last trigger", 0f,
-            new ConfigDescription("", null,
-                new ConfigurationManagerAttributes { Browsable = false }));
+            new ConfigDescription("DO NOT TOUCH this", null, new ConfigurationManagerAttributes { Browsable = false }));
 
         onTimer += () =>
         {
