@@ -28,6 +28,10 @@ public static class Terrains
     private static void ResetTerrainComp(ZDO zdo, bool checkWards)
     {
         var divider = dividerConfig.Value;
+        var resetSmoothValue = resetSmoothing.Value;
+        var resetSmoothingLastValue = resetSmoothing.Value;
+        var resetPaintValue = resetPaint.Value;
+        var resetPaintLastValue = resetPaintLast.Value;
         var minHeightToSteppedReset = minHeightToSteppedResetConfig.Value;
         var zoneCenter = ZoneSystem.instance.GetZonePos(ZoneSystem.instance.GetZone(zdo.GetPosition()));
 
@@ -43,24 +47,35 @@ public static class Terrains
             if (checkWards && IsInWard(zoneCenter, w, h)) continue;
 
             data.m_levelDelta[idx] /= divider;
-            data.m_smoothDelta[idx] /= divider;
             if (data.m_levelDelta[idx] < minHeightToSteppedReset) data.m_levelDelta[idx] = 0;
-            if (data.m_smoothDelta[idx] < minHeightToSteppedReset) data.m_smoothDelta[idx] = 0;
-            data.m_modifiedHeight[idx] = data.m_levelDelta[idx] != 0;
+            if (resetSmoothValue && (resetSmoothingLastValue == false || data.m_levelDelta[idx] == 0))
+            {
+                data.m_smoothDelta[idx] /= divider;
+                if (data.m_smoothDelta[idx] < minHeightToSteppedReset) data.m_smoothDelta[idx] = 0;
+            }
+
+            var flag_b = resetSmoothValue ? data.m_smoothDelta[idx] != 0 : false;
+            data.m_modifiedHeight[idx] = data.m_levelDelta[idx] != 0 || flag_b;
         }
 
-        num = HeightmapWidth;
-        var paintLenMun1 = data.m_modifiedPaint.Length - 1;
-        for (var h = 0; h < num; h++)
-        for (var w = 0; w < num; w++)
+        if (resetPaintValue)
         {
-            var idx = h * num + w;
-            if (idx > paintLenMun1) continue;
-            if (!data.m_modifiedPaint[idx]) continue;
-            if (checkWards && IsInWard(zoneCenter, w, h)) continue;
+            num = HeightmapWidth;
+            var paintLenMun1 = data.m_modifiedPaint.Length - 1;
+            for (var h = 0; h < num; h++)
+            for (var w = 0; w < num; w++)
+            {
+                var idx = h * num + w;
+                if (idx > paintLenMun1) continue;
+                if (!data.m_modifiedPaint[idx]) continue;
+                if (checkWards && IsInWard(zoneCenter, w, h)) continue;
+                if (data.m_modifiedHeight.Length > idx + 1 &&
+                    data.m_modifiedHeight[idx] &&
+                    resetPaintLastValue) continue;
 
-            data.m_modifiedPaint[idx] = false;
-            data.m_paintMask[idx] = Color.clear;
+                data.m_modifiedPaint[idx] = false;
+                data.m_paintMask[idx] = Color.clear;
+            }
         }
 
 

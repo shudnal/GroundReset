@@ -9,7 +9,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.4.3",
+        ModVersion = "2.4.4",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -20,6 +20,10 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<float> savedTimeUpdateIntervalConfig;
     internal static ConfigEntry<float> dividerConfig;
     internal static ConfigEntry<float> minHeightToSteppedResetConfig;
+    internal static ConfigEntry<bool> resetPaint;
+    internal static ConfigEntry<bool> resetSmoothing;
+    internal static ConfigEntry<bool> resetSmoothingLast;
+    internal static ConfigEntry<bool> resetPaintLast;
     internal static float timeInMinutes = -1;
     internal static float timePassedInMinutes;
     internal static float savedTimeUpdateInterval;
@@ -38,6 +42,15 @@ public class Plugin : BaseUnityPlugin
             "How often elapsed time will be saved to config file.");
         timePassedInMinutesConfig = config("DO NOT TOUCH", "time has passed since the last trigger", 0f,
             new ConfigDescription("DO NOT TOUCH this", null, new ConfigurationManagerAttributes { Browsable = false }));
+        resetPaint = config("General", "Reset Paint", true, "Should the terrain paint be reset");
+        resetSmoothing = config("General", "Reset Smoothing", true, "Should the terrain smoothing be reset");
+        resetPaintLast = config("General", "Process Paint Lastly", true,
+            "Set to true so that the paint is reset only after the ground height delta and smoothing is completely reset. "
+            + "Otherwise, the paint will be reset at each reset step along with the height delta.");
+        resetSmoothingLast = config("General", "Process Smoothing After Height", true,
+            "Set to true so that the smoothing is reset only after the ground height delta is completely reset. "
+            + "Otherwise, the smoothing will be reset at each reset step along with the height delta.");
+
 
         onTimer += () =>
         {
