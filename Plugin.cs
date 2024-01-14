@@ -51,7 +51,6 @@ public class Plugin : BaseUnityPlugin
             "Set to true so that the smoothing is reset only after the ground height delta is completely reset. "
             + "Otherwise, the smoothing will be reset at each reset step along with the height delta.");
 
-
         onTimer += () =>
         {
             Debug("Timer Triggered, Resetting...");
