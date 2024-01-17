@@ -63,7 +63,7 @@ public static class Reseter
         ZNetScene.instance.StartCoroutine(SaveTime());
     }
 
-    public static bool IsInWard(Vector3 pos, float checkRadius)
+    public static bool IsInWard(Vector3 pos, float checkRadius = 0)
     {
         return wards.Exists(searchWard =>
         {
