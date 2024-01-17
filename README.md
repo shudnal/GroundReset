@@ -2,7 +2,7 @@
 
 # GroundReset
 
-![Version Badge](https://img.shields.io/badge/version-2.4.4-green.svg)
+![Version Badge](https://img.shields.io/badge/version-2.4.5-green.svg)
 
 A dedicated server mod that restores terrain back to its original state gradually over a configurable rate.
 
