@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using BepInEx;
 using BepInEx.Configuration;
+using GroundReset.Patch;
 using UnityEngine.SceneManagement;
 
 namespace GroundReset;
@@ -10,7 +11,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.4.5",
+        ModVersion = "2.5.1",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -25,10 +26,8 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<float> paintsCompairToleranceConfig;
     internal static ConfigEntry<string> paintsToIgnoreConfig;
     internal static ConfigEntry<bool> resetSmoothingConfig;
-
     internal static ConfigEntry<bool> resetSmoothingLastConfig;
-
-    // internal static ConfigEntry<bool> resetPaintLastConfig;
+    internal static ConfigEntry<bool> resetPaintLastConfig;
     internal static ConfigEntry<bool> debugConfig;
     internal static ConfigEntry<bool> debugTestConfig;
     internal static float timeInMinutes = -1;
@@ -70,10 +69,9 @@ public class Plugin : BaseUnityPlugin
             + "Since the current values of the same paint may differ from the reference in different situations, "
             + "they have to be compared with the difference in this value.");
         resetSmoothingConfig = config("General", "Reset Smoothing", true, "Should the terrain smoothing be reset");
-        //Work in progress
-        // resetPaintLastConfig = config("General", "Process Paint Lastly", true,
-        //     "Set to true so that the paint is reset only after the ground height delta and smoothing is completely reset. "
-        //     + "Otherwise, the paint will be reset at each reset step along with the height delta.");
+        resetPaintLastConfig = config("General", "Process Paint Lastly", true,
+            "Set to true so that the paint is reset only after the ground height delta and smoothing is completely reset. "
+            + "Otherwise, the paint will be reset at each reset step along with the height delta.");
         resetSmoothingLastConfig = config("General", "Process Smoothing After Height", true,
             "Set to true so that the smoothing is reset only after the ground height delta is completely reset. "
             + "Otherwise, the smoothing will be reset at each reset step along with the height delta.");
@@ -99,8 +97,9 @@ public class Plugin : BaseUnityPlugin
         timePassedInMinutes = timePassedInMinutesConfig.Value;
         savedTimeUpdateInterval = savedTimeUpdateIntervalConfig.Value;
         paintsCompairTolerance = paintsCompairToleranceConfig.Value;
-        // resetPaintLast = resetPaintLastConfig?.Value ?? false;
+        resetPaintLast = resetPaintLastConfig.Value;
         TryParsePaints(paintsToIgnoreConfig.Value);
+        InitWardsSettings.RegisterWards();
 
 
         if (debug) DebugWarning($"paintsToIgnore = {paintsToIgnore.GetString()}");

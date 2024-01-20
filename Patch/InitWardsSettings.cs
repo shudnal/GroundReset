@@ -11,7 +11,12 @@ namespace GroundReset.Patch;
         if (SceneManager.GetActiveScene().name != "main") return;
         if (!ZNet.instance.IsServer()) return;
 
-        wardsSettingsList = new List<WardSettings>();
+        RegisterWards();
+    }
+
+    internal static void RegisterWards()
+    {
+        wardsSettingsList.Clear();
 
         AddWard("guard_stone");
         AddWardThorward();
@@ -31,6 +36,11 @@ namespace GroundReset.Patch;
         var name = "Thorward";
         var prefab = ZNetScene.instance.GetPrefab(name.GetStableHashCode());
         if (!prefab) return;
-        wardsSettingsList.Add(new WardSettings(name, WardIsLovePlugin.WardRange().Value));
+        wardsSettingsList.Add(new WardSettings(name, zdo =>
+        {
+            var radius = zdo.GetFloat(AzuWardZdoKeys.wardRadius, 0);
+            if (radius == 0) return WardIsLovePlugin.WardRange().Value;
+            return radius;
+        }));
     }
 }

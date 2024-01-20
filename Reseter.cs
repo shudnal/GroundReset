@@ -70,12 +70,12 @@ public static class Reseter
             var wardSettings =
                 wardsSettingsList.Find(s => s.prefabName.GetStableHashCode() == searchWard.GetPrefab());
             var isEnabled = searchWard.GetBool(ZDOVars.s_enabled);
-            var wardRadius = searchWard.GetFloat(RadiusNetKey, -1);
-            if (wardRadius == -1) wardRadius = wardSettings.radius;
+            if (!isEnabled) return false; // not enabled, skip range check
+            float wardRadius = wardSettings.dynamicRadius
+                ? wardSettings.getDynamicRadius(searchWard)
+                : wardSettings.radius;
             var inRange = pos.DistanceXZ(searchWard.GetPosition()) <= wardRadius + checkRadius;
-            searchWard.Set(RadiusNetKey, wardRadius);
-
-            return isEnabled && inRange;
+            return inRange;
         }) || MarketplaceTerritorySystem.PointInTerritory(pos);
     }
 

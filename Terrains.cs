@@ -31,8 +31,7 @@ public static class Terrains
         var resetSmooth = resetSmoothingConfig.Value;
         var resetSmoothingLast = resetSmoothingConfig.Value;
         var minHeightToSteppedReset = minHeightToSteppedResetConfig.Value;
-        var heightmapPos = zdo.GetPosition();
-        var zoneCenter = ZoneSystem.instance.GetZonePos(ZoneSystem.instance.GetZone(heightmapPos));
+        var zoneCenter = ZoneSystem.instance.GetZonePos(ZoneSystem.instance.GetZone(zdo.GetPosition()));
 
         var data = LoadOldData(zdo);
 
@@ -46,11 +45,11 @@ public static class Terrains
             if (checkWards && IsInWard(zoneCenter, w, h)) continue;
 
             data.m_levelDelta[idx] /= divider;
-            if (data.m_levelDelta[idx] < minHeightToSteppedReset) data.m_levelDelta[idx] = 0;
+            if (Abs(data.m_levelDelta[idx]) < minHeightToSteppedReset) data.m_levelDelta[idx] = 0;
             if (resetSmooth && (resetSmoothingLast == false || data.m_levelDelta[idx] == 0))
             {
                 data.m_smoothDelta[idx] /= divider;
-                if (data.m_smoothDelta[idx] < minHeightToSteppedReset) data.m_smoothDelta[idx] = 0;
+                if (Abs(data.m_smoothDelta[idx]) < minHeightToSteppedReset) data.m_smoothDelta[idx] = 0;
             }
 
             var flag_b = resetSmooth ? data.m_smoothDelta[idx] != 0 : false;
@@ -68,14 +67,13 @@ public static class Terrains
             if (!data.m_modifiedPaint[idx]) continue;
             if (checkWards || resetPaintLast)
             {
-                var worldPos = HmapToWorld(zoneCenter, w, h) + new Vector3(0.5f, 0, 0.5f);
+                var worldPos = HmapToWorld(zoneCenter, w, h);
                 if (checkWards && IsInWard(worldPos)) continue;
                 if (resetPaintLast)
                 {
-                    WorldToVertex(worldPos, heightmapPos, out int x, out int y);
-                    var heightIdx = x * (HeightmapWidth + 1) + y;
-                    if (data.m_modifiedHeight.Length > heightIdx + 1 &&
-                        data.m_modifiedHeight[heightIdx]) continue;
+                    WorldToVertex(worldPos, zoneCenter, out int x, out int y);
+                    var heightIdx = y * (HeightmapWidth + 1) + x;
+                    if (data.m_modifiedHeight.Length > heightIdx && data.m_modifiedHeight[heightIdx]) continue;
                 }
             }
 
@@ -87,10 +85,9 @@ public static class Terrains
             data.m_paintMask[idx] = Color.clear;
         }
 
-
         SaveData(zdo, data);
 
-        ClutterSystem.instance?.ResetGrass(heightmapPos, HeightmapWidth * HeightmapScale / 2);
+        ClutterSystem.instance?.ResetGrass(zoneCenter, HeightmapWidth * HeightmapScale / 2);
 
         foreach (var comp in TerrainComp.s_instances)
             comp.m_hmap?.Poke(false);
