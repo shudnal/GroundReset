@@ -11,7 +11,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.5.1",
+        ModVersion = "2.5.2",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
@@ -36,17 +36,17 @@ public class Plugin : BaseUnityPlugin
     internal static float savedTimeUpdateInterval;
     internal static bool debug;
     internal static bool debug_test;
-    internal static bool resetPaintLast = false;
+    internal static bool resetPaintLast;
     internal static List<Color> paintsToIgnore = new();
     private Dictionary<string, Color> vanillaPresets;
 
     private void Awake()
     {
-        vanillaPresets = new();
-        vanillaPresets.Add("Dirt", Heightmap.m_paintMaskDirt);
-        vanillaPresets.Add("Cultivated", Heightmap.m_paintMaskCultivated);
-        vanillaPresets.Add("Paved", Heightmap.m_paintMaskPaved);
-        vanillaPresets.Add("Nothing", Heightmap.m_paintMaskNothing);
+        vanillaPresets = new Dictionary<string, Color>();
+        vanillaPresets.Add("Dirt", m_paintMaskDirt);
+        vanillaPresets.Add("Cultivated", m_paintMaskCultivated);
+        vanillaPresets.Add("Paved", m_paintMaskPaved);
+        vanillaPresets.Add("Nothing", m_paintMaskNothing);
         vanillaPresetsMsg = "Vanilla presets: " + vanillaPresets.Keys.GetString();
 
         CreateMod(this, ModName, ModAuthor, ModVersion, ModGUID);
@@ -62,7 +62,7 @@ public class Plugin : BaseUnityPlugin
         timePassedInMinutesConfig = config("DO NOT TOUCH", "time has passed since the last trigger", 0f,
             new ConfigDescription("DO NOT TOUCH this", null, new ConfigurationManagerAttributes { Browsable = false }));
         paintsToIgnoreConfig =
-            config("General", "Paint To Ignore", $"(Paved), (Cultivated)",
+            config("General", "Paint To Ignore", "(Paved), (Cultivated)",
                 $"This paints will be ignored in the reset process.\n{vanillaPresetsMsg}");
         paintsCompairToleranceConfig = config("General", "Paints Compair Tolerance", 0.3f,
             "The accuracy of the comparison of colors. "

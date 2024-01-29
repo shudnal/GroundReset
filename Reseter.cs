@@ -71,7 +71,7 @@ public static class Reseter
                 wardsSettingsList.Find(s => s.prefabName.GetStableHashCode() == searchWard.GetPrefab());
             var isEnabled = searchWard.GetBool(ZDOVars.s_enabled);
             if (!isEnabled) return false; // not enabled, skip range check
-            float wardRadius = wardSettings.dynamicRadius
+            var wardRadius = wardSettings.dynamicRadius
                 ? wardSettings.getDynamicRadius(searchWard)
                 : wardSettings.radius;
             var inRange = pos.DistanceXZ(searchWard.GetPosition()) <= wardRadius + checkRadius;
@@ -79,8 +79,5 @@ public static class Reseter
         }) || MarketplaceTerritorySystem.PointInTerritory(pos);
     }
 
-    public static bool IsInWard(Vector3 zoneCenter, int w, int h)
-    {
-        return IsInWard(HmapToWorld(zoneCenter, w, h), 0f);
-    }
+    public static bool IsInWard(Vector3 zoneCenter, int w, int h) { return IsInWard(HmapToWorld(zoneCenter, w, h)); }
 }

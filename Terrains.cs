@@ -71,7 +71,7 @@ public static class Terrains
                 if (checkWards && IsInWard(worldPos)) continue;
                 if (resetPaintLast)
                 {
-                    WorldToVertex(worldPos, zoneCenter, out int x, out int y);
+                    WorldToVertex(worldPos, zoneCenter, out var x, out var y);
                     var heightIdx = y * (HeightmapWidth + 1) + x;
                     if (data.m_modifiedHeight.Length > heightIdx && data.m_modifiedHeight[heightIdx]) continue;
                 }
@@ -93,12 +93,14 @@ public static class Terrains
             comp.m_hmap?.Poke(false);
     }
 
-    private static bool IsPaintIgnored(Color color) =>
-        paintsToIgnore.Exists(x =>
+    private static bool IsPaintIgnored(Color color)
+    {
+        return paintsToIgnore.Exists(x =>
             Abs(x.r - color.r) < paintsCompairTolerance &&
             Abs(x.b - color.b) < paintsCompairTolerance &&
             Abs(x.g - color.g) < paintsCompairTolerance &&
             Abs(x.a - color.a) < paintsCompairTolerance);
+    }
 
     private static void SaveData(ZDO zdo, ChunkData data)
     {

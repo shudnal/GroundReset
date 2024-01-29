@@ -20,6 +20,13 @@ namespace GroundReset.Patch;
 
         AddWard("guard_stone");
         AddWardThorward();
+
+        if (ZNetScene.instance && ZNetScene.instance.m_prefabs != null && ZNetScene.instance.m_prefabs.Count > 0)
+        {
+            var foundWards = ZNetScene.instance.m_prefabs.Where(x => x.GetComponent<PrivateArea>()).ToList();
+            Debug($"Found {foundWards.Count} wards: {foundWards.GetString()}");
+            foreach (var privateArea in foundWards) AddWard(privateArea.name);
+        }
     }
 
     private static void AddWard(string name)
@@ -28,6 +35,7 @@ namespace GroundReset.Patch;
         if (!prefab) return;
 
         var areaComponent = prefab.GetComponent<PrivateArea>();
+        if (wardsSettingsList.Exists(x => x.prefabName == name)) return;
         wardsSettingsList.Add(new WardSettings(name, areaComponent.m_radius));
     }
 
@@ -38,7 +46,7 @@ namespace GroundReset.Patch;
         if (!prefab) return;
         wardsSettingsList.Add(new WardSettings(name, zdo =>
         {
-            var radius = zdo.GetFloat(AzuWardZdoKeys.wardRadius, 0);
+            var radius = zdo.GetFloat(AzuWardZdoKeys.wardRadius);
             if (radius == 0) return WardIsLovePlugin.WardRange().Value;
             return radius;
         }));

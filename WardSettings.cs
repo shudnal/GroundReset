@@ -15,7 +15,7 @@ public struct WardSettings
 
     public WardSettings(string prefabName, Func<ZDO, float> getDynamicRadius) : this(prefabName, 0)
     {
-        this.dynamicRadius = true;
+        dynamicRadius = true;
         this.getDynamicRadius = getDynamicRadius;
     }
 }
