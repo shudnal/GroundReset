@@ -11,12 +11,12 @@ public class Plugin : BaseUnityPlugin
 {
     private const string ModName = "GroundReset",
         ModAuthor = "Frogger",
-        ModVersion = "2.5.2",
+        ModVersion = "2.6.0",
         ModGUID = $"com.{ModAuthor}.{ModName}";
 
     internal static Action onTimer;
     internal static FunctionTimer timer;
-    internal static string vanillaPresetsMsg;
+    private static string vanillaPresetsMsg;
 
     internal static ConfigEntry<float> timeInMinutesConfig;
     internal static ConfigEntry<float> timePassedInMinutesConfig;
@@ -30,23 +30,27 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<bool> resetPaintLastConfig;
     internal static ConfigEntry<bool> debugConfig;
     internal static ConfigEntry<bool> debugTestConfig;
+    internal static ConfigEntry<bool> debugPaintArrayMissmatchConfig;
     internal static float timeInMinutes = -1;
     internal static float paintsCompairTolerance = 0.3f;
     internal static float timePassedInMinutes;
     internal static float savedTimeUpdateInterval;
     internal static bool debug;
     internal static bool debug_test;
+    internal static bool debug_paintArrayMissmatch;
     internal static bool resetPaintLast;
     internal static List<Color> paintsToIgnore = new();
     private Dictionary<string, Color> vanillaPresets;
 
     private void Awake()
     {
-        vanillaPresets = new Dictionary<string, Color>();
-        vanillaPresets.Add("Dirt", m_paintMaskDirt);
-        vanillaPresets.Add("Cultivated", m_paintMaskCultivated);
-        vanillaPresets.Add("Paved", m_paintMaskPaved);
-        vanillaPresets.Add("Nothing", m_paintMaskNothing);
+        vanillaPresets = new Dictionary<string, Color>
+        {
+            { "Dirt", m_paintMaskDirt },
+            { "Cultivated", m_paintMaskCultivated },
+            { "Paved", m_paintMaskPaved },
+            { "Nothing", m_paintMaskNothing }
+        };
         vanillaPresetsMsg = "Vanilla presets: " + vanillaPresets.Keys.GetString();
 
         CreateMod(this, ModName, ModAuthor, ModVersion, ModGUID);
@@ -77,6 +81,9 @@ public class Plugin : BaseUnityPlugin
             + "Otherwise, the smoothing will be reset at each reset step along with the height delta.");
         debugConfig = config("Debug", "Do some test debugs", false, "");
         debugTestConfig = config("Debug", "Do some dev goofy debugs", false, "");
+        debugPaintArrayMissmatchConfig = config("Debug", "Debug Paint Array Missmatch", true, 
+            "Should mod notify if the number of colors in the paint array does not match the number of colors in the paint mask."
+            + "Yes, that is an error, but idk what to with it");
 
         onTimer += () =>
         {
@@ -93,14 +100,15 @@ public class Plugin : BaseUnityPlugin
 
         debug = debugConfig.Value;
         debug_test = debugTestConfig.Value;
+        debug_paintArrayMissmatch = debugPaintArrayMissmatchConfig.Value;
         timeInMinutes = timeInMinutesConfig.Value;
         timePassedInMinutes = timePassedInMinutesConfig.Value;
         savedTimeUpdateInterval = savedTimeUpdateIntervalConfig.Value;
         paintsCompairTolerance = paintsCompairToleranceConfig.Value;
         resetPaintLast = resetPaintLastConfig.Value;
         TryParsePaints(paintsToIgnoreConfig.Value);
-        InitWardsSettings.RegisterWards();
-
+        
+        if (ZNetScene.instance) InitWardsSettings.RegisterWards();
 
         if (debug) DebugWarning($"paintsToIgnore = {paintsToIgnore.GetString()}");
 

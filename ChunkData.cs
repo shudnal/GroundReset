@@ -7,6 +7,9 @@
     public float[] m_smoothDelta;
     public bool[] m_modifiedPaint;
     public Color[] m_paintMask;
+    public float m_lastOpRadius;
+    public Vector3 m_lastOpPoint;
+    public int m_operations;
 
     public ChunkData()
     {
