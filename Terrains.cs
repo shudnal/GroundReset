@@ -32,7 +32,7 @@ public static class Terrains
         var resetSmooth = resetSmoothingConfig.Value;
         var resetSmoothingLast = resetSmoothingConfig.Value;
         var minHeightToSteppedReset = minHeightToSteppedResetConfig.Value;
-        var zoneCenter = ZoneSystem.instance.GetZonePos(ZoneSystem.instance.GetZone(zdo.GetPosition()));
+        var zoneCenter = GetZonePos(GetZone(zdo.GetPosition()));
 
         ChunkData data = null;
         try
