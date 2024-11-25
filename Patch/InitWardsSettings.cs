@@ -20,6 +20,7 @@ namespace GroundReset.Patch;
 
         AddWard("guard_stone");
         AddWardThorward();
+        AddWardArcaneWard();
 
         if (ZNetScene.instance && ZNetScene.instance.m_prefabs != null && ZNetScene.instance.m_prefabs.Count > 0)
         {
@@ -36,7 +37,12 @@ namespace GroundReset.Patch;
 
         var areaComponent = prefab.GetComponent<PrivateArea>();
         if (wardsSettingsList.Exists(x => x.prefabName == name)) return;
-        wardsSettingsList.Add(new WardSettings(name, areaComponent.m_radius));
+        wardsSettingsList.Add(new WardSettings(name, zdo =>
+        {
+            var radius = zdo.GetInt("ward_range".GetStableHashCode());
+            if (radius == 0) return areaComponent.m_radius;
+            return radius;
+        }));
     }
 
     private static void AddWardThorward()
@@ -48,6 +54,19 @@ namespace GroundReset.Patch;
         {
             var radius = zdo.GetFloat(AzuWardZdoKeys.wardRadius);
             if (radius == 0) return WardIsLovePlugin.WardRange().Value;
+            return radius;
+        }));
+    }
+
+    private static void AddWardArcaneWard()
+    {
+        var name = "ArcaneWard";
+        var prefab = ZNetScene.instance.GetPrefab(name.GetStableHashCode());
+        if (!prefab) return;
+        wardsSettingsList.Add(new WardSettings(name, zdo =>
+        {
+            var radius = zdo.GetInt("Radius".GetStableHashCode());
+            if (radius == 0) return 64;
             return radius;
         }));
     }
